@@ -1,0 +1,21 @@
+#!name = 指尖水务
+#!desc = 移除指尖水务开屏广告
+#!openUrl = https://apps.apple.com/cn/app/id1546591649
+#!author = luoxx[https://github.com/luoxmc]
+#!tag = 去广告
+#!system = 
+#!system_version = 
+#!loon_version = 3.3.2(877)
+#!homepage = https://github.com/luoxmc/loon/blob/main/README.md
+#!icon = https://raw.githubusercontent.com/luoxmc/loon/main/Icon/zjsw.png
+#!date = 2025-09-04 17:25
+
+[Rule]
+
+[Rewrite]
+^https:\/\/wl.tap-water.cn\/product\/getOnlineSlide\? response-body-json-replace content []
+
+[Script]
+
+[MitM]
+hostname = wl.tap-water.cn

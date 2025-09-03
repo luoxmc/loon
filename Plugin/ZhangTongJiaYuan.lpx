@@ -1,5 +1,5 @@
 #!name = 掌通家园
-#!desc = 掌通家园移除开屏广告、移除顶部banner广告，移除活动推荐banner、移除首页消息中的信息流广告
+#!desc = 移除掌通家园开屏广告、顶部banner广告，活动推荐banner、首页消息中的信息流广告
 #!openUrl = https://apps.apple.com/cn/app/id914847333
 #!author = luoxx[https://github.com/luoxmc]
 #!tag = 去广告

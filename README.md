@@ -1,5 +1,5 @@
 # loon
-自用loon相关资源
+原创loon外部资源
 
 > [!CAUTION]
 > 本仓库发布的内容仅用于学习和研究目的，**不得将本仓库内容用于商业或者非法用途，不得在中国境内平台传播**。否则，一切后果由您自行负责。您必须在下载后的24个小时之内，从您的设备中彻底删除上述内容。
@@ -15,7 +15,7 @@
 
 ------
 
-插件列表：
+### 插件列表：
 1. 掌通家园：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx
-
+2. 指尖水务：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx
 
