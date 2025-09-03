@@ -1,0 +1,29 @@
+#!name = 掌通家园
+#!desc = 掌通家园移除开屏广告、移除顶部banner广告，移除活动推荐banner、移除首页消息中的信息流广告
+#!openUrl = https://apps.apple.com/cn/app/id914847333
+#!author = luoxx[https://github.com/luoxmc]
+#!tag = 去广告
+#!system = 
+#!system_version = 
+#!loon_version = 3.3.2(877)
+#!homepage = https://github.com/luoxmc/loon/blob/main/README.md
+#!icon = https://raw.githubusercontent.com/luoxmc/loon/main/Icon/ztjy.png
+#!date = 2025-09-04 15:50
+
+[Rule]
+
+[Rewrite]
+^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 response-body-json-replace body.gardener.push_ad_shutdown 0
+^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 response-body-json-replace body.parent.push_ad_shutdown 0
+^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 response-body-json-del body.parent.jd_tian_gong_ad_config
+^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 response-body-json-replace body.parent.popup_ad_config.show_page []
+^https:\/\/api.szy.cn\/appOpenServer\/banner\/getSchoolBanners\/v5.0 response-body-json-replace body.banners []
+^https:\/\/api.szy.cn\/growthtask\/topictask\/home\/recommend\/v1.0 response-body-json-replace body.topicTaskList []
+^https:\/\/api.szy.cn\/growthproxy\/schoolfeed\/downrefresh\/v3.3 response-body-json-jq '.body.feeds |= map(select(.name != "掌通家园"))'
+^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.0 response-body-json-replace body {}
+^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.3 response-body-json-replace body.data [{}]
+
+[Script]
+
+[MitM]
+hostname = api.szy.cn
