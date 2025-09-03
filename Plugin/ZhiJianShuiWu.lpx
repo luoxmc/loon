@@ -1,5 +1,5 @@
 #!name = 指尖水务
-#!desc = 移除指尖水务开屏广告
+#!desc = 移除指尖水务开屏广告、缴费页广告
 #!openUrl = https://apps.apple.com/cn/app/id1546591649
 #!author = luoxx[https://github.com/luoxmc]
 #!tag = 去广告
@@ -14,6 +14,7 @@
 
 [Rewrite]
 ^https:\/\/wl.tap-water.cn\/product\/getOnlineSlide\? response-body-json-replace content []
+^https:\/\/wl.tap-water.cn\/product\/getSlideImage\? response-body-json-replace content []
 
 [Script]
 
