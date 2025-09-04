@@ -16,9 +16,10 @@
 ------
 
 ### 插件列表：
-1. 掌通家园去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx
-2. 指尖水务去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx
-3. 挚达去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx
-4. 中国移动去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx
+> 点击链接即可快速导入loon
+1. 掌通家园去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx)
+2. 指尖水务去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx)
+3. 挚达去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx)
+4. 中国移动去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx)
 
 
