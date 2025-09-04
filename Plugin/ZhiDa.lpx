@@ -1,5 +1,5 @@
 #!name = 挚达去广告
-#!desc = 移除指尖水务开屏广告、缴费页广告
+#!desc = 移除挚达滚动播报的通告、移除底部支付宝跳转链接
 #!openUrl = https://apps.apple.com/cn/app/id6444815321
 #!author = luoxx[https://github.com/luoxmc]
 #!tag = 去广告
