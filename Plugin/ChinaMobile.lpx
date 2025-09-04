@@ -1,0 +1,42 @@
+#!name = 中国移动去广告
+#!desc = 过滤中国移动广告，不对内部活动进行相关广告去除；
+#!openUrl = https://apps.apple.com/app/id583700738
+#!author = Yuheng0101[https://github.com/Yuheng0101], anker1209[https://github.com/anker1209]
+#!tag = 去广告
+#!system = 
+#!system_version = 
+#!loon_version = 3.3.2(877)
+#!homepage = https://github.com/sooyaaabo/Loon/blob/main/README.md
+#!icon = https://raw.githubusercontent.com/sooyaaabo/Loon/main/Icon/App-Icon/ChinaMobile.png
+#!date = 2025-06-15 00:00
+
+# version 1.0.0
+# https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js
+# 2024-11-14 16:00:00
+# https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/scripable.loon.plugin
+# 2024-12-06 version 2.1.1
+# https://raw.githubusercontent.com/anker1209/Scriptable/main/scripts/ChinaMobile_2024.js
+
+[Argument]
+
+[Rewrite]
+# 开屏
+^https?:\/\/(client\.app\.coc|app)\.10086\.cn\/biz-orange\/DN\/(explorePage\/getAdverList|init\/startInit|emotionMarket) reject-200
+# ^https?:\/\/h\.app\.coc\.10086\.cn\/biz-orange\/DN\/emotionMarket reject
+
+[Script]
+# 过滤广告，不对内部活动进行相关广告去除
+# 启动页
+http-response ^https?:\/\/client\.app\.coc\.10086\.cn\/biz-orange\/DN\/init\/startInit$ script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]启动页
+# 首页 - 下拉
+http-response ^https?:\/\/client\.app\.coc\.10086\.cn\/biz-orange\/DN\/newTopPullSecond\/getNewTopPullList script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]首页-下拉
+# 首页 - 悬浮广告
+http-response ^https?:\/\/client\.app\.coc\.10086\.cn\/biz-orange\/DN\/emotionMarket\/getEmotionMarketNew script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]首页-悬浮广告
+# http-response ^https?:\/\/h\.app\.coc\.10086\.cn\/biz-orange\/DH\/homeArea\/getTopAreaList script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]首页-悬浮广告
+# 办理 - 横幅
+# http-response ^https?:\/\/h\.app\.coc\.10086\.cn\/biz-orange\/DH\/navigation\/getNavigationNewInfo script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]办理-横幅
+# 我的 - 弹窗 
+http-response ^https?:\/\/client\.app\.coc\.10086\.cn\/biz-orange\/DN\/friendShake\/getShakeList script-path = https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/ChinaMobile/NoAds.js, requires-body = true, tag = [中国移动]我的-弹窗
+
+[MitM]
+hostname = client.app.coc.10086.cn, api.example.com

@@ -1,0 +1,22 @@
+#!name = 挚达去广告
+#!desc = 移除指尖水务开屏广告、缴费页广告
+#!openUrl = https://apps.apple.com/cn/app/id6444815321
+#!author = luoxx[https://github.com/luoxmc]
+#!tag = 去广告
+#!system = 
+#!system_version = 
+#!loon_version = 3.3.2(877)
+#!homepage = https://github.com/luoxmc/loon/blob/main/README.md
+#!icon = https://raw.githubusercontent.com/luoxmc/loon/main/Icon/zhida.png
+#!date = 2025-09-04 09:19
+
+[Rule]
+
+[Rewrite]
+^http:\/\/iot.shzhida.com:6771\/api\/d1\/app\/advertisement\/listSetting response-body-json-replace data.adSettingMap {}
+^http:\/\/iot.shzhida.com:6771\/api\/d1\/aliMiniPro\/announcement\/list response-body-json-replace data []
+
+[Script]
+
+[MitM]
+hostname = iot.shzhida.com

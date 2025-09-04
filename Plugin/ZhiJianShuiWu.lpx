@@ -1,4 +1,4 @@
-#!name = 指尖水务
+#!name = 指尖水务去广告
 #!desc = 移除指尖水务开屏广告、缴费页广告
 #!openUrl = https://apps.apple.com/cn/app/id1546591649
 #!author = luoxx[https://github.com/luoxmc]
@@ -8,7 +8,7 @@
 #!loon_version = 3.3.2(877)
 #!homepage = https://github.com/luoxmc/loon/blob/main/README.md
 #!icon = https://raw.githubusercontent.com/luoxmc/loon/main/Icon/zjsw.png
-#!date = 2025-09-04 17:25
+#!date = 2025-09-03 17:25
 
 [Rule]
 

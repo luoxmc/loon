@@ -16,6 +16,9 @@
 ------
 
 ### 插件列表：
-1. 掌通家园：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx
-2. 指尖水务：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx
+1. 掌通家园去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx
+2. 指尖水务去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx
+3. 挚达去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx
+4. 中国移动去广告：https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx
+
 
