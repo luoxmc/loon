@@ -8,7 +8,7 @@
 #!loon_version = 3.3.2(877)
 #!homepage = https://github.com/luoxmc/loon/blob/main/README.md
 #!icon = https://raw.githubusercontent.com/luoxmc/loon/main/Icon/ztjy.png
-#!date = 2025-09-03 15:50
+#!date = 2025-10-30 17:50
 
 [Rule]
 
@@ -22,6 +22,7 @@
 ^https:\/\/api.szy.cn\/growthproxy\/schoolfeed\/downrefresh\/v3.3 response-body-json-jq '.body.feeds |= map(select(.name != "掌通家园"))'
 ^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.0 response-body-json-replace body {}
 ^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.3 response-body-json-replace body.data [{}]
+^https:\/\/api.szy.cn\/messageserver\/getmsg\/v1.0 response-body-json-replace body.redNum []
 
 [Script]
 
