@@ -85,6 +85,7 @@ var sort = "";
 var ua = false;
 var debug = false;
 var HAS_SUPPORTED_PARAM = false;
+var DEBUG_VM_SAMPLE_LIMIT = 5;
 
 function getStorageKey() {
     var url = "default";
@@ -229,8 +230,82 @@ function decodeVmessPayload(payload) {
     return base64DecodeUnicode(body);
 }
 
+function decodeQueryValue(value) {
+    try { return decodeURIComponent(String(value || '').replace(/\+/g, '%20')); }
+    catch (e) { return String(value || ''); }
+}
+
+function splitUriParts(line) {
+    var raw = String(line || '');
+    var hashPos = raw.indexOf('#');
+    var beforeHash = hashPos > -1 ? raw.slice(0, hashPos) : raw;
+    var hash = hashPos > -1 ? raw.slice(hashPos) : '';
+    var queryPos = beforeHash.indexOf('?');
+    return {
+        base: queryPos > -1 ? beforeHash.slice(0, queryPos) : beforeHash,
+        query: queryPos > -1 ? beforeHash.slice(queryPos + 1) : '',
+        hash: hash
+    };
+}
+
+function findQueryParam(query, keys) {
+    var parts = String(query || '').split('&');
+    for (var i = 0; i < parts.length; i++) {
+        if (!parts[i]) continue;
+        var eqPos = parts[i].indexOf('=');
+        var rawKey = eqPos > -1 ? parts[i].slice(0, eqPos) : parts[i];
+        var key = decodeQueryValue(rawKey).toLowerCase();
+        for (var j = 0; j < keys.length; j++) {
+            if (key === keys[j]) {
+                return {
+                    index: i,
+                    rawKey: rawKey,
+                    value: eqPos > -1 ? parts[i].slice(eqPos + 1) : ''
+                };
+            }
+        }
+    }
+    return null;
+}
+
+function replaceQueryParam(query, targetIndex, rawKey, value) {
+    var parts = String(query || '').split('&');
+    parts[targetIndex] = rawKey + '=' + encodeURIComponent(value);
+    return parts.join('&');
+}
+
+function parseVmessQueryUri(line, lineNumber) {
+    var parts = splitUriParts(line);
+    if (!parts.query) return null;
+
+    var nameParam = findQueryParam(parts.query, ['remarks', 'remark', 'ps', 'tag', 'name']);
+    if (!nameParam) {
+        debugLog('第 ' + lineNumber + ' 行 VMess query 未找到 remarks/ps/tag/name: ' + previewText(parts.query));
+        return null;
+    }
+
+    var oldName = decodeQueryValue(nameParam.value);
+    if (!oldName) {
+        debugLog('第 ' + lineNumber + ' 行 VMess query 名称为空: ' + previewText(parts.query));
+        return null;
+    }
+
+    var newName = modifyName(oldName);
+    var newQuery = replaceQueryParam(parts.query, nameParam.index, nameParam.rawKey, newName);
+    debugLog('第 ' + lineNumber + ' 行 VMess query: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
+    return {
+        index: lineNumber - 1,
+        name: newName,
+        raw: parts.base + '?' + newQuery + parts.hash,
+        jsonVmess: true
+    };
+}
+
 function parseVmessUri(line, lineNumber) {
     if (String(line || '').indexOf('vmess://') !== 0) return null;
+
+    var queryItem = parseVmessQueryUri(line, lineNumber);
+    if (queryItem) return queryItem;
 
     var rest = String(line).slice(8);
     var hashPos = rest.lastIndexOf('#');
@@ -324,6 +399,8 @@ function renameBase64UriList(text) {
     var vmessDecoded = 0;
     var vmessFailed = 0;
     var noHashCount = 0;
+    var vmessRawSamples = 0;
+    var vmessFailSamples = 0;
 
     debugLog('base64 订阅解码成功，行数: ' + lines.length + '，内容预览: ' + previewText(decoded.replace(/\n/g, '\\n'), 160));
 
@@ -334,6 +411,10 @@ function renameBase64UriList(text) {
         protocolStats[protocol] = (protocolStats[protocol] || 0) + 1;
 
         if (protocol === 'vmess') {
+            if (debug && vmessRawSamples < DEBUG_VM_SAMPLE_LIMIT) {
+                vmessRawSamples++;
+                debugLog('VMess原始样本#' + vmessRawSamples + ' 第 ' + (i + 1) + ' 行: ' + previewText(line, 500));
+            }
             var vmessItem = parseVmessUri(line, i + 1);
             if (vmessItem) {
                 vmessItem.index = items.length;
@@ -343,6 +424,10 @@ function renameBase64UriList(text) {
                 continue;
             }
             vmessFailed++;
+            if (debug && vmessFailSamples < DEBUG_VM_SAMPLE_LIMIT) {
+                vmessFailSamples++;
+                debugLog('VMess失败样本#' + vmessFailSamples + ' 第 ' + (i + 1) + ' 行: ' + previewText(line, 500));
+            }
         }
 
         var hashPos = line.lastIndexOf('#');
@@ -509,7 +594,7 @@ if (canUpdateConfig) {
         else if (key === 'rename') rename = value;
         else if (key === 'sort') sort = value;
         else if (key === 'ua') ua = value === '';
-        else if (key === 'debug') debug = value === '';
+        else if (key === 'debug') debug = value === '' || value === '1' || value.toLowerCase() === 'true';
         else if (key === 'reset') {}
     }
 
