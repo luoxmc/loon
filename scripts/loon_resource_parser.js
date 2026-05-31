@@ -23,7 +23,6 @@
  * - rename=   普通文本替换，例如 rename=香港:HK,日本:JP
  * - sort=     按关键词顺序排序节点，例如 sort=香港,日本,新加坡,美国
  * - ua        使用 Shadowrocket User-Agent 重新拉取订阅
- * - debug     输出详细解析日志，用于定位订阅格式问题
  * - reset     清空当前订阅已保存的配置
  *
  * 参数说明：
@@ -41,8 +40,6 @@
  *   按关键词顺序排序节点
  * - ua
  *   使用 Shadowrocket User-Agent 重新拉取当前订阅
- * - debug
- *   输出详细解析日志，定位节点名称未修改、协议识别失败等问题
  * - reset
  *   清空当前订阅已保存的参数配置
  *
@@ -83,9 +80,7 @@ var emoji = false;
 var rename = "";
 var sort = "";
 var ua = false;
-var debug = false;
 var HAS_SUPPORTED_PARAM = false;
-var DEBUG_VM_SAMPLE_LIMIT = 5;
 
 function getStorageKey() {
     var url = "default";
@@ -94,22 +89,11 @@ function getStorageKey() {
 }
 
 function isSupportedParamKey(key) {
-    return key === 'pre' || key === 'suf' || key === 'emoji' || key === 'rename' || key === 'sort' || key === 'ua' || key === 'debug' || key === 'reset';
+    return key === 'pre' || key === 'suf' || key === 'emoji' || key === 'rename' || key === 'sort' || key === 'ua' || key === 'reset';
 }
 
 function parserLog(message) {
     console.log('[解析器] ' + message);
-}
-
-function debugLog(message) {
-    if (debug) parserLog('[debug] ' + message);
-}
-
-function previewText(text, maxLen) {
-    var s = String(text || '');
-    maxLen = maxLen || 80;
-    if (s.length <= maxLen) return s;
-    return s.slice(0, maxLen) + '...';
 }
 
 function cleanEmoji(text) {
@@ -279,20 +263,13 @@ function parseVmessQueryUri(line, lineNumber) {
     if (!parts.query) return null;
 
     var nameParam = findQueryParam(parts.query, ['remarks', 'remark', 'ps', 'tag', 'name']);
-    if (!nameParam) {
-        debugLog('第 ' + lineNumber + ' 行 VMess query 未找到 remarks/ps/tag/name: ' + previewText(parts.query));
-        return null;
-    }
+    if (!nameParam) return null;
 
     var oldName = decodeQueryValue(nameParam.value);
-    if (!oldName) {
-        debugLog('第 ' + lineNumber + ' 行 VMess query 名称为空: ' + previewText(parts.query));
-        return null;
-    }
+    if (!oldName) return null;
 
     var newName = modifyName(oldName);
     var newQuery = replaceQueryParam(parts.query, nameParam.index, nameParam.rawKey, newName);
-    debugLog('第 ' + lineNumber + ' 行 VMess query: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
     return {
         index: lineNumber - 1,
         name: newName,
@@ -314,10 +291,7 @@ function parseVmessUri(line, lineNumber) {
     var fragment = hashPos > -1 ? rest.slice(hashPos + 1) : '';
     var decoded = decodeVmessPayload(payload);
 
-    if (!decoded) {
-        debugLog('第 ' + lineNumber + ' 行 VMess payload base64 解码失败: ' + previewText(payload));
-        return null;
-    }
+    if (!decoded) return null;
 
     try {
         var json = JSON.parse(decoded);
@@ -326,18 +300,11 @@ function parseVmessUri(line, lineNumber) {
             try { oldName = decodeURIComponent(fragment); }
             catch (e) { oldName = fragment; }
         }
-        if (!oldName) {
-            debugLog('第 ' + lineNumber + ' 行 VMess 未找到 ps 或 fragment 名称: ' + previewText(decoded));
-            return null;
-        }
+        if (!oldName) return null;
         var newName = modifyName(oldName);
         json.ps = newName;
         var encoded = base64EncodeUnicode(JSON.stringify(json));
-        if (!encoded) {
-            debugLog('第 ' + lineNumber + ' 行 VMess JSON 重新编码失败: ' + previewText(decoded));
-            return null;
-        }
-        debugLog('第 ' + lineNumber + ' 行 VMess: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
+        if (!encoded) return null;
         return {
             index: lineNumber - 1,
             name: newName,
@@ -345,7 +312,6 @@ function parseVmessUri(line, lineNumber) {
             jsonVmess: true
         };
     } catch (e) {
-        debugLog('第 ' + lineNumber + ' 行 VMess JSON解析失败: ' + e + '，内容: ' + previewText(decoded));
         return null;
     }
 }
@@ -395,38 +361,19 @@ function renameBase64UriList(text) {
     var lines = normalizeText(decoded).split('\n');
     var changed = 0;
     var items = [];
-    var protocolStats = {};
-    var vmessDecoded = 0;
-    var vmessFailed = 0;
-    var noHashCount = 0;
-    var vmessRawSamples = 0;
-    var vmessFailSamples = 0;
-
-    debugLog('base64 订阅解码成功，行数: ' + lines.length + '，内容预览: ' + previewText(decoded.replace(/\n/g, '\\n'), 160));
 
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i].trim();
         if (!line) continue;
         var protocol = getUriProtocol(line);
-        protocolStats[protocol] = (protocolStats[protocol] || 0) + 1;
 
         if (protocol === 'vmess') {
-            if (debug && vmessRawSamples < DEBUG_VM_SAMPLE_LIMIT) {
-                vmessRawSamples++;
-                debugLog('VMess原始样本#' + vmessRawSamples + ' 第 ' + (i + 1) + ' 行: ' + previewText(line, 500));
-            }
             var vmessItem = parseVmessUri(line, i + 1);
             if (vmessItem) {
                 vmessItem.index = items.length;
                 items.push(vmessItem);
-                vmessDecoded++;
                 changed++;
                 continue;
-            }
-            vmessFailed++;
-            if (debug && vmessFailSamples < DEBUG_VM_SAMPLE_LIMIT) {
-                vmessFailSamples++;
-                debugLog('VMess失败样本#' + vmessFailSamples + ' 第 ' + (i + 1) + ' 行: ' + previewText(line, 500));
             }
         }
 
@@ -438,13 +385,10 @@ function renameBase64UriList(text) {
             try { oldName = decodeURIComponent(frag); }
             catch (e) { oldName = frag; }
             var newName = modifyName(oldName);
-            debugLog('第 ' + (i + 1) + ' 行 ' + protocol + '#: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
             items.push({ index: items.length, name: newName, left: left });
             changed++;
         } else {
             items.push({ index: items.length, name: '', raw: line, noHash: true });
-            noHashCount++;
-            debugLog('第 ' + (i + 1) + ' 行 ' + protocol + ' 未找到可修改节点名: ' + previewText(line));
         }
     }
 
@@ -480,12 +424,6 @@ function renameBase64UriList(text) {
     var encoded = base64EncodeUnicode(output.join('\n'));
     if (!encoded) return null;
 
-    var statParts = [];
-    for (var p in protocolStats) {
-        if (protocolStats.hasOwnProperty(p)) statParts.push(p + '=' + protocolStats[p]);
-    }
-    parserLog('base64 URI列表统计: ' + (statParts.length ? statParts.join(', ') : '无'));
-    parserLog('VMess解析: 成功=' + vmessDecoded + ', 失败=' + vmessFailed + ', 无可改名=' + noHashCount);
     parserLog('已修改节点数: ' + changed);
     return encoded;
 }
@@ -494,7 +432,6 @@ function processResourceContent(content) {
     var raw = normalizeText(content);
     var configParts = [];
     if (ua) configParts.push('ua');
-    if (debug) configParts.push('debug');
     if (emoji) configParts.push('emoji');
     if (rename) configParts.push('rename=' + rename);
     if (pre) configParts.push('pre=' + pre);
@@ -502,7 +439,6 @@ function processResourceContent(content) {
     if (sort) configParts.push('sort=' + sort);
     parserLog('当前配置: ' + (configParts.length ? configParts.join(', ') : '无'));
     parserLog('订阅内容长度: ' + raw.length);
-    debugLog('订阅原始预览: ' + previewText(raw.replace(/\n/g, '\\n'), 180));
 
     var trimmed = raw.trim();
     if (!trimmed) {
@@ -537,7 +473,6 @@ if (savedConfig) {
         rename = c.rename || "";
         sort = c.sort || "";
         ua = c.ua === true;
-        debug = c.debug === true;
         parserLog('已读取本地配置');
     } catch (e) {
         parserLog('本地配置解析失败');
@@ -581,7 +516,6 @@ if (canUpdateConfig) {
         rename = "";
         sort = "";
         ua = false;
-        debug = false;
     }
     for (var j = 0; j < params.length; j++) {
         var kv = params[j].split('=');
@@ -594,11 +528,10 @@ if (canUpdateConfig) {
         else if (key === 'rename') rename = value;
         else if (key === 'sort') sort = value;
         else if (key === 'ua') ua = value === '';
-        else if (key === 'debug') debug = value === '' || value === '1' || value.toLowerCase() === 'true';
         else if (key === 'reset') {}
     }
 
-    var config = { pre: pre, suf: suf, emoji: emoji, rename: rename, sort: sort, ua: ua, debug: debug };
+    var config = { pre: pre, suf: suf, emoji: emoji, rename: rename, sort: sort, ua: ua };
     $persistentStore.write(JSON.stringify(config), STORAGE_KEY);
     parserLog('已更新本地配置');
 } else {
