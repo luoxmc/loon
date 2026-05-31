@@ -23,6 +23,7 @@
  * - rename=   普通文本替换，例如 rename=香港:HK,日本:JP
  * - sort=     按关键词顺序排序节点，例如 sort=香港,日本,新加坡,美国
  * - ua        使用 Shadowrocket User-Agent 重新拉取订阅
+ * - debug     输出详细解析日志，用于定位订阅格式问题
  * - reset     清空当前订阅已保存的配置
  *
  * 参数说明：
@@ -40,6 +41,8 @@
  *   按关键词顺序排序节点
  * - ua
  *   使用 Shadowrocket User-Agent 重新拉取当前订阅
+ * - debug
+ *   输出详细解析日志，定位节点名称未修改、协议识别失败等问题
  * - reset
  *   清空当前订阅已保存的参数配置
  *
@@ -80,6 +83,7 @@ var emoji = false;
 var rename = "";
 var sort = "";
 var ua = false;
+var debug = false;
 var HAS_SUPPORTED_PARAM = false;
 
 function getStorageKey() {
@@ -89,7 +93,22 @@ function getStorageKey() {
 }
 
 function isSupportedParamKey(key) {
-    return key === 'pre' || key === 'suf' || key === 'emoji' || key === 'rename' || key === 'sort' || key === 'ua' || key === 'reset';
+    return key === 'pre' || key === 'suf' || key === 'emoji' || key === 'rename' || key === 'sort' || key === 'ua' || key === 'debug' || key === 'reset';
+}
+
+function parserLog(message) {
+    console.log('[解析器] ' + message);
+}
+
+function debugLog(message) {
+    if (debug) parserLog('[debug] ' + message);
+}
+
+function previewText(text, maxLen) {
+    var s = String(text || '');
+    maxLen = maxLen || 80;
+    if (s.length <= maxLen) return s;
+    return s.slice(0, maxLen) + '...';
 }
 
 function cleanEmoji(text) {
@@ -161,6 +180,7 @@ function modifyName(name) {
 
 function base64DecodeUnicode(str) {
     try {
+        str = normalizeBase64(str);
         if (typeof atob !== 'undefined') {
             var binary = atob(str);
             var bytes = [];
@@ -183,11 +203,76 @@ function base64EncodeUnicode(str) {
     return null;
 }
 
+function normalizeBase64(str) {
+    var s = String(str || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+    var mod = s.length % 4;
+    if (mod) s += new Array(5 - mod).join('=');
+    return s;
+}
+
 function looksLikeBase64(text) {
-    var s = String(text || '').replace(/\s+/g, '');
+    var s = normalizeBase64(String(text || '').replace(/\s+/g, ''));
     if (!s || s.length < 16) return false;
     if (s.length % 4 !== 0) return false;
     return /^[A-Za-z0-9+/=]+$/.test(s);
+}
+
+function getUriProtocol(line) {
+    var match = String(line || '').match(/^([A-Za-z][A-Za-z0-9+.-]*):\/\//);
+    return match ? match[1].toLowerCase() : 'unknown';
+}
+
+function decodeVmessPayload(payload) {
+    var body = String(payload || '').trim();
+    if (!body) return null;
+    if (body.charAt(0) === '{') return body;
+    return base64DecodeUnicode(body);
+}
+
+function parseVmessUri(line, lineNumber) {
+    if (String(line || '').indexOf('vmess://') !== 0) return null;
+
+    var rest = String(line).slice(8);
+    var hashPos = rest.lastIndexOf('#');
+    var hasFragment = hashPos > -1;
+    var payload = hashPos > -1 ? rest.slice(0, hashPos) : rest;
+    var fragment = hashPos > -1 ? rest.slice(hashPos + 1) : '';
+    var decoded = decodeVmessPayload(payload);
+
+    if (!decoded) {
+        debugLog('第 ' + lineNumber + ' 行 VMess payload base64 解码失败: ' + previewText(payload));
+        return null;
+    }
+
+    try {
+        var json = JSON.parse(decoded);
+        var oldName = json.ps || '';
+        if (!oldName && fragment) {
+            try { oldName = decodeURIComponent(fragment); }
+            catch (e) { oldName = fragment; }
+        }
+        if (!oldName) {
+            debugLog('第 ' + lineNumber + ' 行 VMess 未找到 ps 或 fragment 名称: ' + previewText(decoded));
+            return null;
+        }
+        var newName = modifyName(oldName);
+        json.ps = newName;
+        var encoded = base64EncodeUnicode(JSON.stringify(json));
+        if (!encoded) {
+            debugLog('第 ' + lineNumber + ' 行 VMess JSON 重新编码失败: ' + previewText(decoded));
+            return null;
+        }
+        debugLog('第 ' + lineNumber + ' 行 VMess: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
+        return {
+            index: lineNumber - 1,
+            name: newName,
+            raw: 'vmess://' + encoded + (hasFragment ? '#' + encodeURIComponent(newName) : ''),
+            jsonVmess: true
+        };
+    } catch (e) {
+        debugLog('第 ' + lineNumber + ' 行 VMess JSON解析失败: ' + e + '，内容: ' + previewText(decoded));
+        return null;
+    }
 }
 
 function renameLoonStyleText(text) {
@@ -223,7 +308,7 @@ function renameLoonStyleText(text) {
         output.push(items[j].name + '=' + items[j].value);
     }
 
-    console.log('[解析器] 已修改节点数: ' + count);
+    parserLog('已修改节点数: ' + count);
     return output.join('\n');
 }
 
@@ -235,32 +320,31 @@ function renameBase64UriList(text) {
     var lines = normalizeText(decoded).split('\n');
     var changed = 0;
     var items = [];
+    var protocolStats = {};
+    var vmessDecoded = 0;
+    var vmessFailed = 0;
+    var noHashCount = 0;
+
+    debugLog('base64 订阅解码成功，行数: ' + lines.length + '，内容预览: ' + previewText(decoded.replace(/\n/g, '\\n'), 160));
 
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i].trim();
         if (!line) continue;
-        // 支持 vmess://{"ps":"xxx"}
-        if (line.indexOf('vmess://{') === 0) {
-            try {
-                var json = JSON.parse(line.substring(8));
-    
-                if (json.ps) {
-                   json.ps = modifyName(json.ps);
-                }
+        var protocol = getUriProtocol(line);
+        protocolStats[protocol] = (protocolStats[protocol] || 0) + 1;
 
-                items.push({
-                   index: items.length,
-                   name: json.ps || '',
-                   raw: 'vmess://' + JSON.stringify(json),
-                   jsonVmess: true
-                });
-
+        if (protocol === 'vmess') {
+            var vmessItem = parseVmessUri(line, i + 1);
+            if (vmessItem) {
+                vmessItem.index = items.length;
+                items.push(vmessItem);
+                vmessDecoded++;
                 changed++;
                 continue;
-            } catch (e) {
-              console.log('[解析器] VMess JSON解析失败');
             }
+            vmessFailed++;
         }
+
         var hashPos = line.lastIndexOf('#');
         if (hashPos > -1 && hashPos < line.length - 1) {
             var left = line.slice(0, hashPos + 1);
@@ -268,10 +352,14 @@ function renameBase64UriList(text) {
             var oldName = '';
             try { oldName = decodeURIComponent(frag); }
             catch (e) { oldName = frag; }
-            items.push({ index: items.length, name: modifyName(oldName), left: left });
+            var newName = modifyName(oldName);
+            debugLog('第 ' + (i + 1) + ' 行 ' + protocol + '#: ' + previewText(oldName, 40) + ' => ' + previewText(newName, 40));
+            items.push({ index: items.length, name: newName, left: left });
             changed++;
         } else {
             items.push({ index: items.length, name: '', raw: line, noHash: true });
+            noHashCount++;
+            debugLog('第 ' + (i + 1) + ' 行 ' + protocol + ' 未找到可修改节点名: ' + previewText(line));
         }
     }
 
@@ -279,8 +367,6 @@ function renameBase64UriList(text) {
     var passthrough = [];
     for (var j = 0; j < items.length; j++) {
         if (items[j].noHash) {
-            passthrough.push(items[j]);
-        } else if (items[j].jsonVmess) {
             passthrough.push(items[j]);
         } else {
             sortable.push(items[j]);
@@ -309,7 +395,13 @@ function renameBase64UriList(text) {
     var encoded = base64EncodeUnicode(output.join('\n'));
     if (!encoded) return null;
 
-    console.log('[解析器] 已修改节点数: ' + changed);
+    var statParts = [];
+    for (var p in protocolStats) {
+        if (protocolStats.hasOwnProperty(p)) statParts.push(p + '=' + protocolStats[p]);
+    }
+    parserLog('base64 URI列表统计: ' + (statParts.length ? statParts.join(', ') : '无'));
+    parserLog('VMess解析: 成功=' + vmessDecoded + ', 失败=' + vmessFailed + ', 无可改名=' + noHashCount);
+    parserLog('已修改节点数: ' + changed);
     return encoded;
 }
 
@@ -317,13 +409,15 @@ function processResourceContent(content) {
     var raw = normalizeText(content);
     var configParts = [];
     if (ua) configParts.push('ua');
+    if (debug) configParts.push('debug');
     if (emoji) configParts.push('emoji');
     if (rename) configParts.push('rename=' + rename);
     if (pre) configParts.push('pre=' + pre);
     if (suf) configParts.push('suf=' + suf);
     if (sort) configParts.push('sort=' + sort);
-    console.log('[解析器] 当前配置: ' + (configParts.length ? configParts.join(', ') : '无'));
-    console.log('[解析器] 订阅内容长度: ' + raw.length);
+    parserLog('当前配置: ' + (configParts.length ? configParts.join(', ') : '无'));
+    parserLog('订阅内容长度: ' + raw.length);
+    debugLog('订阅原始预览: ' + previewText(raw.replace(/\n/g, '\\n'), 180));
 
     var trimmed = raw.trim();
     if (!trimmed) {
@@ -358,12 +452,13 @@ if (savedConfig) {
         rename = c.rename || "";
         sort = c.sort || "";
         ua = c.ua === true;
-        console.log('[解析器] 已读取本地配置');
+        debug = c.debug === true;
+        parserLog('已读取本地配置');
     } catch (e) {
-        console.log('[解析器] 本地配置解析失败');
+        parserLog('本地配置解析失败');
     }
 } else {
-    console.log('[解析器] 未找到本地配置，使用默认值');
+    parserLog('未找到本地配置，使用默认值');
 }
 
 var argStr = "";
@@ -401,6 +496,7 @@ if (canUpdateConfig) {
         rename = "";
         sort = "";
         ua = false;
+        debug = false;
     }
     for (var j = 0; j < params.length; j++) {
         var kv = params[j].split('=');
@@ -413,14 +509,15 @@ if (canUpdateConfig) {
         else if (key === 'rename') rename = value;
         else if (key === 'sort') sort = value;
         else if (key === 'ua') ua = value === '';
+        else if (key === 'debug') debug = value === '';
         else if (key === 'reset') {}
     }
 
-    var config = { pre: pre, suf: suf, emoji: emoji, rename: rename, sort: sort, ua: ua };
+    var config = { pre: pre, suf: suf, emoji: emoji, rename: rename, sort: sort, ua: ua, debug: debug };
     $persistentStore.write(JSON.stringify(config), STORAGE_KEY);
-    console.log('[解析器] 已更新本地配置');
+    parserLog('已更新本地配置');
 } else {
-    console.log('[解析器] 未更新本地配置');
+    parserLog('未更新本地配置');
 }
 
 function refetchWithShadowrocketUA() {
