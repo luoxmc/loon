@@ -15,15 +15,19 @@
 
 ------
 
+
 ### 插件列表：
 > 点击链接即可快速导入loon
+
 1. 掌通家园去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhangTongJiaYuan.lpx)
 2. 指尖水务去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiJianShuiWu.lpx)
 3. 挚达去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ZhiDa.lpx)
 4. 中国移动去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx](https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/luoxmc/loon/main/Plugin/ChinaMobile.lpx)
 
+
 ### 资源解析器
 > 修改自 [mc2u](https://github.com/mc2u/Loon) 的资源解析器，修复了部分vmess节点无法增加前缀后缀、无法修改节点名称的问题
+
 地址：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/Scripts/loon_resource_parser.js
 
 
