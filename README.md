@@ -24,6 +24,6 @@
 
 ### 资源解析器
 > 修改自 [mc2u](https://github.com/mc2u/Loon) 的资源解析器，修复了部分vmess节点无法增加前缀后缀、无法修改节点名称的问题
-https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/Scripts/loon_resource_parser.js
+地址：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/Scripts/loon_resource_parser.js
 
 
