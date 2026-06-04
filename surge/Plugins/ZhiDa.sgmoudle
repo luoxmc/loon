@@ -14,5 +14,5 @@ http-response-jq ^http:\/\/iot.shzhida.com:6771\/api\/d1\/app\/advertisement\/li
 http-response-jq ^http:\/\/iot.shzhida.com:6771\/api\/d1\/aliMiniPro\/announcement\/list 'if (getpath([]) | has("data")) then (setpath(["data"]; [])) else . end'
 
 [MITM]
-hostname = %APPEND% iot.shzhida.com
+hostname = %APPEND% iot.shzhida.com:0
 
