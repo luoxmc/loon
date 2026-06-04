@@ -1,0 +1,25 @@
+#!name=掌通家园去广告
+#!desc=移除掌通家园开屏广告、顶部banner广告，活动推荐banner、首页消息中的信息流广告
+#!author=luoxx[https://github.com/luoxmc]
+#!icon=https://raw.githubusercontent.com/luoxmc/loon/main/Icon/ztjy.png
+#!openUrl=https://apps.apple.com/cn/app/id914847333
+#!tag=去广告
+#!loon_version=3.3.2(877)
+#!homepage=https://github.com/luoxmc/loon/blob/main/README.md
+#!date=2025-10-30 17:50
+
+[Body Rewrite]
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 'if (getpath(["body","gardener"]) | has("push_ad_shutdown")) then (setpath(["body","gardener","push_ad_shutdown"]; 0)) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 'if (getpath(["body","parent"]) | has("push_ad_shutdown")) then (setpath(["body","parent","push_ad_shutdown"]; 0)) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 'delpaths([["body","parent","jd_tian_gong_ad_config"]])'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 'if (getpath(["body","parent","popup_ad_config"]) | has("show_page")) then (setpath(["body","parent","popup_ad_config","show_page"]; [])) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/banner\/getSchoolBanners\/v5.0 'if (getpath(["body"]) | has("banners")) then (setpath(["body","banners"]; [])) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/growthtask\/topictask\/home\/recommend\/v1.0 'if (getpath(["body"]) | has("topicTaskList")) then (setpath(["body","topicTaskList"]; [])) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/growthproxy\/schoolfeed\/downrefresh\/v3.3 '.body.feeds |= map(select(.name != "掌通家园"))'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.0 'if (getpath([]) | has("body")) then (setpath(["body"]; {})) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/ad\/post\/v1.3 'if (getpath(["body"]) | has("data")) then (setpath(["body","data"]; [{}])) else . end'
+http-response-jq ^https:\/\/api.szy.cn\/messageserver\/getmsg\/v1.0 'if (getpath(["body"]) | has("redNum")) then (setpath(["body","redNum"]; [])) else . end'
+
+[MITM]
+hostname = %APPEND% api.szy.cn
+
