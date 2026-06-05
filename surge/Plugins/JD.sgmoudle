@@ -20,4 +20,4 @@ URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT,extended-matching
 移除京东广告 = type=http-response, pattern=^https:\/\/api\.m\.jd\.com\/client\.action, script-path=https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Scripts/jd_ads_remove.js, requires-body=true, max-size=2097152, debug=true
 
 [MITM]
-hostname = %APPEND% api.m.jd.com
+hostname = %APPEND% api.m.jd.com, api.m.jd.com:0
