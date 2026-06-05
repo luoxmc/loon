@@ -4,6 +4,7 @@
 // 2024-01-23 09:50
 
 const url = $request.url;
+const requestBody = $request.body;
 const body = $response.body;
 
 const handlerRules = [
@@ -88,9 +89,12 @@ const homeBlockedTypes = [
 
 if (body) {
     const obj = JSON.parse(body);
-    const matchedRule = findHandlerRule(url);
-    const functionId = getFunctionId(url);
+    // 判断url中是不是有functionId参数，没有的话就取requestBody作为参数传进下面两个方法
+    const functionId = getFunctionId(url, requestBody);
+    const matchedRule = findHandlerRule(functionId);
 
+    log(`url=${url}`)
+    log(`requestBody=${requestBody}`);
     log(`functionId=${functionId || "unknown"}`);
 
     if (matchedRule) {
@@ -107,12 +111,31 @@ if (body) {
     $done({});
 }
 
-function getFunctionId(requestUrl) {
-    return requestUrl.match(/[?&]functionId=([^&]+)/)?.[1];
+function getFunctionId(requestUrl, requestBody) {
+    // 首先尝试从 URL 中获取 functionId
+    const urlParam = requestUrl.match(/[?&]functionId=([^&]+)/)?.[1];
+    if (urlParam) {
+        return urlParam;
+    }
+    
+    // 如果 URL 中没有，则从 requestBody 中获取
+    if (requestBody) {
+        try {
+            const params = JSON.parse(requestBody);
+            return params.functionId;
+        } catch (e) {
+            log(`failed to parse requestBody for functionId: ${e.message}`);
+        }
+    }
+    
+    return undefined;
 }
 
-function findHandlerRule(requestUrl) {
-    return handlerRules.find((rule) => rule.patterns.some((pattern) => requestUrl.includes(pattern)));
+function findHandlerRule(functionId) {
+    if (!functionId) {
+        return null;
+    }
+    return handlerRules.find((rule) => rule.patterns.some((pattern) => pattern.includes(functionId)));
 }
 
 function cleanBasicConfig(obj) {
