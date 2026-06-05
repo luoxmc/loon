@@ -49,8 +49,6 @@ const homeBlockedTypes = [
 if (body) {
     const obj = JSON.parse(body);
     
-    log("start processing response body");
-    
     // 对所有响应统一执行广告清理，不依赖 functionId
     // 每个清理函数内部会检查对应的 key 是否存在，不存在则跳过
     cleanBasicConfig(obj);
@@ -62,18 +60,15 @@ if (body) {
     cleanStrategyConfig(obj);
     cleanHomeConfig(obj);
 
-    log("script finished");
     $done({ body: JSON.stringify(obj) });
 } else {
-    log("empty response body, skipped");
+    log("⚪ empty response body, skipped");
     $done({});
 }
 
 
 
 function cleanBasicConfig(obj) {
-    log("cleanBasicConfig start");
-
     setExistingProperty(obj?.data?.JDHttpToolKit?.httpdns, "httpdns", 0, "data.JDHttpToolKit.httpdns.httpdns");
     setExistingProperty(
         obj?.data?.JDMessage?.socketmonitor,
@@ -85,29 +80,42 @@ function cleanBasicConfig(obj) {
 }
 
 function cleanDeliveryPage(obj) {
-    log("cleanDeliveryPage start");
     // 物流页面：收货时寄快递享八折、运费八折。
-    deleteProperty(obj, "bannerInfo");
+    if (obj?.bannerInfo) {
+        delete obj.bannerInfo;
+        log("✅ deleted bannerInfo");
+    }
 
     if (obj?.floors?.length > 0) {
         const beforeCount = obj.floors.length;
         obj.floors = obj.floors.filter((floor) => !deliveryBlockedFloorIds.includes(floor?.mId));
-        log(`delivery floors ${beforeCount} -> ${obj.floors.length}`);
+        if (obj.floors.length < beforeCount) {
+            log(`✅ delivery floors filtered ${beforeCount} -> ${obj.floors.length}`);
+        } else {
+            log("⚪ delivery floors unchanged");
+        }
     }
 }
 
 function cleanNewProductPage(obj) {
-    log("cleanNewProductPage start");
     // 新品页：悬浮动图、下拉二楼。
-    deleteProperty(obj?.result, "iconInfo");
-    deleteProperty(obj?.result, "roofTop");
+    let modified = false;
+    if (obj?.result?.iconInfo) {
+        delete obj.result.iconInfo;
+        modified = true;
+    }
+    if (obj?.result?.roofTop) {
+        delete obj.result.roofTop;
+        modified = true;
+    }
+    if (modified) {
+        log("✅ cleaned new product page");
+    }
 }
 
 function cleanOrderPage(obj) {
-    log("cleanOrderPage start");
-
     if (!(obj?.floors?.length > 0)) {
-        log("order floors empty, skipped");
+        log("⚪ order floors empty, skipped");
         return;
     }
 
@@ -121,7 +129,11 @@ function cleanOrderPage(obj) {
         cleanOrderFloor(floor);
         return true;
     });
-    log(`order floors ${beforeCount} -> ${obj.floors.length}`);
+    if (obj.floors.length < beforeCount) {
+        log(`✅ order floors filtered ${beforeCount} -> ${obj.floors.length}`);
+    } else {
+        log("⚪ order floors unchanged");
+    }
 }
 
 function cleanOrderFloor(floor) {
@@ -143,7 +155,9 @@ function cleanVirtualServiceCenter(floor) {
             if (item?.serviceList?.length > 0) {
                 const beforeCount = item.serviceList.length;
                 item.serviceList = item.serviceList.filter((card) => card?.serviceTitle !== "精选特惠");
-                log(`virtual service cards ${beforeCount} -> ${item.serviceList.length}`);
+                if (item.serviceList.length < beforeCount) {
+                    log(`✅ virtual service cards filtered ${beforeCount} -> ${item.serviceList.length}`);
+                }
             }
         });
     }
@@ -154,18 +168,16 @@ function cleanCustomerServiceFloor(floor) {
         return;
     }
 
-    log("cleanCustomerServiceFloor apply");
     // 客户服务：点此获得更多服务。
     delete floor.data.moreIcon;
     delete floor.data.moreIcon_dark;
     floor.data.moreText = " ";
+    log("✅ cleaned customer service floor");
 }
 
 function cleanProfilePage(obj) {
-    log("cleanProfilePage start");
-
     if (!(obj?.floors?.length > 0)) {
-        log("profile floors empty, skipped");
+        log("⚪ profile floors empty, skipped");
         return;
     }
 
@@ -178,7 +190,11 @@ function cleanProfilePage(obj) {
         cleanProfileFloor(floor);
         return true;
     });
-    log(`profile floors ${beforeCount} -> ${obj.floors.length}`);
+    if (obj.floors.length < beforeCount) {
+        log(`✅ profile floors filtered ${beforeCount} -> ${obj.floors.length}`);
+    } else {
+        log("⚪ profile floors unchanged");
+    }
 }
 
 function cleanProfileFloor(floor) {
@@ -192,18 +208,33 @@ function cleanProfileFloor(floor) {
 function cleanProfileBaseFloor(floor) {
     const data = floor?.data;
 
-    log("cleanProfileBaseFloor apply");
     // 个人页：弹窗、会员续费横幅、右下角动图。
-    deleteProperty(data, "commonPopup");
-    deleteProperty(data, "commonPopup_dynamic");
-    deleteProperty(data, "floatLayer");
+    let modified = false;
+    if (data?.commonPopup) {
+        delete data.commonPopup;
+        modified = true;
+    }
+    if (data?.commonPopup_dynamic) {
+        delete data.commonPopup_dynamic;
+        modified = true;
+    }
+    if (data?.floatLayer) {
+        delete data.floatLayer;
+        modified = true;
+    }
 
     if (data?.commonTips?.length > 0) {
         data.commonTips = [];
+        modified = true;
     }
 
     if (data?.commonWindows?.length > 0) {
         data.commonWindows = [];
+        modified = true;
+    }
+    
+    if (modified) {
+        log("✅ cleaned profile base floor");
     }
 }
 
@@ -211,17 +242,25 @@ function cleanIconToolFloor(floor) {
     const nodes = floor?.data?.nodes;
 
     if (!(nodes?.length > 0)) {
-        log("icon tool nodes empty, skipped");
+        log("⚪ icon tool nodes empty, skipped");
         return;
     }
 
+    let hasModification = false;
     [0, 1].forEach((index) => {
         if (nodes[index]?.length > 0) {
             const beforeCount = nodes[index].length;
             nodes[index] = sortIconToolNodes(nodes[index]);
-            log(`icon tool nodes[${index}] ${beforeCount} -> ${nodes[index].length}`);
+            if (nodes[index].length < beforeCount) {
+                log(`✅ icon tool nodes[${index}] filtered ${beforeCount} -> ${nodes[index].length}`);
+                hasModification = true;
+            }
         }
     });
+    
+    if (!hasModification) {
+        log("⚪ icon tool nodes unchanged");
+    }
 }
 
 function sortIconToolNodes(nodes) {
@@ -232,52 +271,82 @@ function sortIconToolNodes(nodes) {
 
 function cleanOrderIdFloor(floor) {
     if (floor?.data?.commentRemindInfo?.infos?.length > 0) {
-        log("cleanOrderIdFloor apply");
         // 发布评价的提醒。
         floor.data.commentRemindInfo.infos = [];
+        log("✅ cleared comment remind infos");
     }
 }
 
 function cleanUserInfoFloor(floor) {
-    log("cleanUserInfoFloor apply");
     // 个人页顶部背景图保留；开通 plus 会员卡片移除。
-    deleteProperty(floor?.data, "newPlusBlackCard");
+    if (floor?.data?.newPlusBlackCard) {
+        delete floor.data.newPlusBlackCard;
+        log("✅ removed newPlusBlackCard");
+    }
 }
 
 function cleanSplashAd(obj) {
-    log("cleanSplashAd start");
+    let modified = false;
 
     if (obj?.images?.length > 0) {
-        log(`splash images ${obj.images.length} -> 0`);
         obj.images = [];
+        log("✅ cleared splash images");
+        modified = true;
     }
 
     if (obj?.showTimesDaily) {
-        log(`showTimesDaily ${obj.showTimesDaily} -> 0`);
         obj.showTimesDaily = 0;
+        log("✅ reset showTimesDaily to 0");
+        modified = true;
+    }
+    
+    if (!modified) {
+        log("⚪ splash ad unchanged");
     }
 }
 
 function cleanStrategyConfig(obj) {
-    log("cleanStrategyConfig start");
-
-    setProperty(obj?.data?.startupConfig, "enable", 0, "data.startupConfig.enable");
-    setProperty(obj?.data?.startupConfig, "frequency", 9999, "data.startupConfig.frequency");
+    let modified = false;
+    
+    if (obj?.data?.startupConfig) {
+        if (Object.prototype.hasOwnProperty.call(obj.data.startupConfig, "enable")) {
+            obj.data.startupConfig.enable = 0;
+            modified = true;
+        }
+        if (Object.prototype.hasOwnProperty.call(obj.data.startupConfig, "frequency")) {
+            obj.data.startupConfig.frequency = 9999;
+            modified = true;
+        }
+    }
+    
+    if (modified) {
+        log("✅ updated strategy config");
+    } else {
+        log("⚪ strategy config unchanged");
+    }
 }
 
 function cleanHomeConfig(obj) {
-    log("cleanHomeConfig start");
+    let modified = false;
 
     if (obj?.floorList?.length > 0) {
         const beforeCount = obj.floorList.length;
         obj.floorList = obj.floorList.filter((floor) => !homeBlockedTypes.includes(floor?.type));
-        log(`home floorList ${beforeCount} -> ${obj.floorList.length}`);
+        if (obj.floorList.length < beforeCount) {
+            log(`✅ home floorList filtered ${beforeCount} -> ${obj.floorList.length}`);
+            modified = true;
+        }
     }
 
     // 首页顶部背景图保留；下拉二楼移除。
     if (obj?.webViewFloorList?.length > 0) {
-        log(`webViewFloorList ${obj.webViewFloorList.length} -> 0`);
         obj.webViewFloorList = [];
+        log("✅ cleared webViewFloorList");
+        modified = true;
+    }
+    
+    if (!modified) {
+        log("⚪ home config unchanged");
     }
 }
 
@@ -289,19 +358,15 @@ function deleteProperty(target, key) {
 
 function setExistingProperty(target, key, value, label) {
     if (target && typeof target === "object" && Object.prototype.hasOwnProperty.call(target, key)) {
-        log(`${label} -> ${value}`);
         target[key] = value;
-    } else {
-        log(`${label} not found, skipped`);
+        log(`✅ ${label} -> ${value}`);
     }
 }
 
 function setProperty(target, key, value, label) {
     if (target && typeof target === "object") {
-        log(`${label} -> ${value}`);
         target[key] = value;
-    } else {
-        log(`${label} parent not found, skipped`);
+        log(`✅ ${label} -> ${value}`);
     }
 }
 
