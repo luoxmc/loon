@@ -12,6 +12,7 @@
 DOMAIN,ads-img-x.jd.com,REJECT
 DOMAIN,ads-video-x.jd.com,REJECT
 URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT,extended-matching
+URL-REGEX,"^https:\/\/m\.360buyimg\.com\/mobilecms\/s1125x2436_jfs\/?",REJECT,extended-matching
 
 [Map Local]
 ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(searchBoxWord|stationPullService|uniformRecommend[06]) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -20,4 +21,4 @@ URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT,extended-matching
 移除京东广告 = type=http-response, pattern=^https:\/\/api\.m\.jd\.com\/client\.action, script-path=https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Scripts/jd_ads_remove.js, requires-body=true, max-size=2097152, debug=true
 
 [MITM]
-hostname = %APPEND% api.m.jd.com, api.m.jd.com:0
+hostname = %APPEND% api.m.jd.com, m.360buyimg.com
