@@ -8,6 +8,10 @@ const body = $response.body;
 
 const handlerRules = [
     {
+        patterns: ["functionId=basicConfig"],
+        handler: cleanBasicConfig
+    },
+    {
         patterns: ["functionId=deliverLayer", "functionId=orderTrackBusiness"],
         handler: cleanDeliveryPage
     },
@@ -26,6 +30,10 @@ const handlerRules = [
     {
         patterns: ["functionId=start"],
         handler: cleanSplashAd
+    },
+    {
+        patterns: ["functionId=strategy"],
+        handler: cleanStrategyConfig
     },
     {
         patterns: ["functionId=welcomeHome"],
@@ -80,41 +88,74 @@ const homeBlockedTypes = [
 
 if (body) {
     const obj = JSON.parse(body);
-    const handler = findHandler(url);
+    const matchedRule = findHandlerRule(url);
+    const functionId = getFunctionId(url);
 
-    if (handler) {
-        handler(obj);
+    log(`functionId=${functionId || "unknown"}`);
+
+    if (matchedRule) {
+        log(`matched patterns=${matchedRule.patterns.join("|")}`);
+        matchedRule.handler(obj);
+    } else {
+        log("no matched handler, response body kept unchanged");
     }
 
+    log("script finished");
     $done({ body: JSON.stringify(obj) });
 } else {
+    log("empty response body, skipped");
     $done({});
 }
 
-function findHandler(requestUrl) {
-    return handlerRules.find((rule) => rule.patterns.some((pattern) => requestUrl.includes(pattern)))?.handler;
+function getFunctionId(requestUrl) {
+    return requestUrl.match(/[?&]functionId=([^&]+)/)?.[1];
+}
+
+function findHandlerRule(requestUrl) {
+    return handlerRules.find((rule) => rule.patterns.some((pattern) => requestUrl.includes(pattern)));
+}
+
+function cleanBasicConfig(obj) {
+    log("cleanBasicConfig start");
+
+    setExistingProperty(obj?.data?.JDHttpToolKit?.httpdns, "httpdns", 0, "data.JDHttpToolKit.httpdns.httpdns");
+    setExistingProperty(
+        obj?.data?.JDMessage?.socketmonitor,
+        "isSocketEstablishedAhead",
+        0,
+        "data.JDMessage.socketmonitor.isSocketEstablishedAhead"
+    );
+    setExistingProperty(obj?.data?.JDMessage?.socketmonitor, "isSocketReport", 0, "data.JDMessage.socketmonitor.isSocketReport");
 }
 
 function cleanDeliveryPage(obj) {
+    log("cleanDeliveryPage start");
     // 物流页面：收货时寄快递享八折、运费八折。
     deleteProperty(obj, "bannerInfo");
 
     if (obj?.floors?.length > 0) {
+        const beforeCount = obj.floors.length;
         obj.floors = obj.floors.filter((floor) => !deliveryBlockedFloorIds.includes(floor?.mId));
+        log(`delivery floors ${beforeCount} -> ${obj.floors.length}`);
     }
 }
 
 function cleanNewProductPage(obj) {
+    log("cleanNewProductPage start");
     // 新品页：悬浮动图、下拉二楼。
     deleteProperty(obj?.result, "iconInfo");
     deleteProperty(obj?.result, "roofTop");
 }
 
 function cleanOrderPage(obj) {
+    log("cleanOrderPage start");
+
     if (!(obj?.floors?.length > 0)) {
+        log("order floors empty, skipped");
         return;
     }
 
+    const beforeCount = obj.floors.length;
     obj.floors = obj.floors.filter((floor) => {
         // 订单页面：满意度评分、专属权益、开通会员。
         if (orderBlockedFloorIds.includes(floor?.mId)) {
@@ -124,6 +165,7 @@ function cleanOrderPage(obj) {
         cleanOrderFloor(floor);
         return true;
     });
+    log(`order floors ${beforeCount} -> ${obj.floors.length}`);
 }
 
 function cleanOrderFloor(floor) {
@@ -143,7 +185,9 @@ function cleanVirtualServiceCenter(floor) {
     if (centers?.length > 0) {
         centers.forEach((item) => {
             if (item?.serviceList?.length > 0) {
+                const beforeCount = item.serviceList.length;
                 item.serviceList = item.serviceList.filter((card) => card?.serviceTitle !== "精选特惠");
+                log(`virtual service cards ${beforeCount} -> ${item.serviceList.length}`);
             }
         });
     }
@@ -154,6 +198,7 @@ function cleanCustomerServiceFloor(floor) {
         return;
     }
 
+    log("cleanCustomerServiceFloor apply");
     // 客户服务：点此获得更多服务。
     delete floor.data.moreIcon;
     delete floor.data.moreIcon_dark;
@@ -161,10 +206,14 @@ function cleanCustomerServiceFloor(floor) {
 }
 
 function cleanProfilePage(obj) {
+    log("cleanProfilePage start");
+
     if (!(obj?.floors?.length > 0)) {
+        log("profile floors empty, skipped");
         return;
     }
 
+    const beforeCount = obj.floors.length;
     obj.floors = obj.floors.filter((floor) => {
         if (profileBlockedFloorIds.includes(floor?.mId)) {
             return false;
@@ -173,6 +222,7 @@ function cleanProfilePage(obj) {
         cleanProfileFloor(floor);
         return true;
     });
+    log(`profile floors ${beforeCount} -> ${obj.floors.length}`);
 }
 
 function cleanProfileFloor(floor) {
@@ -186,6 +236,7 @@ function cleanProfileFloor(floor) {
 function cleanProfileBaseFloor(floor) {
     const data = floor?.data;
 
+    log("cleanProfileBaseFloor apply");
     // 个人页：弹窗、会员续费横幅、右下角动图。
     deleteProperty(data, "commonPopup");
     deleteProperty(data, "commonPopup_dynamic");
@@ -204,12 +255,15 @@ function cleanIconToolFloor(floor) {
     const nodes = floor?.data?.nodes;
 
     if (!(nodes?.length > 0)) {
+        log("icon tool nodes empty, skipped");
         return;
     }
 
     [0, 1].forEach((index) => {
         if (nodes[index]?.length > 0) {
+            const beforeCount = nodes[index].length;
             nodes[index] = sortIconToolNodes(nodes[index]);
+            log(`icon tool nodes[${index}] ${beforeCount} -> ${nodes[index].length}`);
         }
     });
 }
@@ -222,33 +276,51 @@ function sortIconToolNodes(nodes) {
 
 function cleanOrderIdFloor(floor) {
     if (floor?.data?.commentRemindInfo?.infos?.length > 0) {
+        log("cleanOrderIdFloor apply");
         // 发布评价的提醒。
         floor.data.commentRemindInfo.infos = [];
     }
 }
 
 function cleanUserInfoFloor(floor) {
+    log("cleanUserInfoFloor apply");
     // 个人页顶部背景图保留；开通 plus 会员卡片移除。
     deleteProperty(floor?.data, "newPlusBlackCard");
 }
 
 function cleanSplashAd(obj) {
+    log("cleanSplashAd start");
+
     if (obj?.images?.length > 0) {
+        log(`splash images ${obj.images.length} -> 0`);
         obj.images = [];
     }
 
     if (obj?.showTimesDaily) {
+        log(`showTimesDaily ${obj.showTimesDaily} -> 0`);
         obj.showTimesDaily = 0;
     }
 }
 
+function cleanStrategyConfig(obj) {
+    log("cleanStrategyConfig start");
+
+    setProperty(obj?.data?.startupConfig, "enable", 0, "data.startupConfig.enable");
+    setProperty(obj?.data?.startupConfig, "frequency", 9999, "data.startupConfig.frequency");
+}
+
 function cleanHomeConfig(obj) {
+    log("cleanHomeConfig start");
+
     if (obj?.floorList?.length > 0) {
+        const beforeCount = obj.floorList.length;
         obj.floorList = obj.floorList.filter((floor) => !homeBlockedTypes.includes(floor?.type));
+        log(`home floorList ${beforeCount} -> ${obj.floorList.length}`);
     }
 
     // 首页顶部背景图保留；下拉二楼移除。
     if (obj?.webViewFloorList?.length > 0) {
+        log(`webViewFloorList ${obj.webViewFloorList.length} -> 0`);
         obj.webViewFloorList = [];
     }
 }
@@ -257,4 +329,26 @@ function deleteProperty(target, key) {
     if (target && typeof target === "object") {
         delete target[key];
     }
+}
+
+function setExistingProperty(target, key, value, label) {
+    if (target && typeof target === "object" && Object.prototype.hasOwnProperty.call(target, key)) {
+        log(`${label} -> ${value}`);
+        target[key] = value;
+    } else {
+        log(`${label} not found, skipped`);
+    }
+}
+
+function setProperty(target, key, value, label) {
+    if (target && typeof target === "object") {
+        log(`${label} -> ${value}`);
+        target[key] = value;
+    } else {
+        log(`${label} parent not found, skipped`);
+    }
+}
+
+function log(message) {
+    console.log(`[JD_remove_ads] ${message}`);
 }
