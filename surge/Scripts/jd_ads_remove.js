@@ -93,8 +93,8 @@ if (body) {
     const functionId = getFunctionId(url, requestBody);
     const matchedRule = findHandlerRule(functionId);
 
-    log(`url=${url}`)
-    log(`requestBody=${requestBody}`);
+    log(`url=${url}`);
+    log(`requestBody=${requestBody || 'empty'}`);
     log(`functionId=${functionId || "unknown"}`);
 
     if (matchedRule) {
@@ -119,11 +119,18 @@ function getFunctionId(requestUrl, requestBody) {
     }
     
     // 如果 URL 中没有，则从 requestBody 中获取
+    // 注意：需要在 Surge 配置中添加 requires-body = true 才能获取到 requestBody
     if (requestBody) {
         try {
+            // requestBody 可能是 JSON 字符串或表单格式
             const params = JSON.parse(requestBody);
             return params.functionId;
         } catch (e) {
+            // 如果不是 JSON，尝试解析为表单格式 (functionId=xxx&other=yyy)
+            const formParam = requestBody.match(/functionId=([^&]+)/)?.[1];
+            if (formParam) {
+                return formParam;
+            }
             log(`failed to parse requestBody for functionId: ${e.message}`);
         }
     }
