@@ -190,7 +190,7 @@ function cleanCustomerServiceFloor(floor) {
     delete floor.data.moreIcon;
     delete floor.data.moreIcon_dark;
     floor.data.moreText = " ";
-    log("✅ cleaned customer service floor");
+    log("✅ deleted moreIcon, moreIcon_dark and set moreText to empty");
 }
 
 function cleanProfilePage(obj) {
@@ -294,9 +294,10 @@ function sortIconToolNodes(nodes) {
 
 function cleanOrderIdFloor(floor) {
     if (floor?.data?.commentRemindInfo?.infos?.length > 0) {
+        const count = floor.data.commentRemindInfo.infos.length;
         // 发布评价的提醒。
         floor.data.commentRemindInfo.infos = [];
-        log("✅ cleared comment remind infos");
+        log(`✅ cleared comment remind infos (${count} items)`);
     }
 }
 
@@ -304,7 +305,7 @@ function cleanUserInfoFloor(floor) {
     // 个人页顶部背景图保留；开通 plus 会员卡片移除。
     if (floor?.data?.newPlusBlackCard) {
         delete floor.data.newPlusBlackCard;
-        log("✅ removed newPlusBlackCard");
+        log("✅ deleted data.newPlusBlackCard");
     }
 }
 
@@ -312,14 +313,16 @@ function cleanSplashAd(obj) {
     let modified = false;
 
     if (obj?.images?.length > 0) {
+        const count = obj.images.length;
         obj.images = [];
-        log("✅ cleared splash images");
+        log(`✅ cleared images (${count} items)`);
         modified = true;
     }
 
     if (obj?.showTimesDaily) {
+        const oldValue = obj.showTimesDaily;
         obj.showTimesDaily = 0;
-        log("✅ reset showTimesDaily to 0");
+        log(`✅ set showTimesDaily ${oldValue} -> 0`);
         modified = true;
     }
     
@@ -333,18 +336,20 @@ function cleanStrategyConfig(obj) {
     
     if (obj?.data?.startupConfig) {
         if (Object.prototype.hasOwnProperty.call(obj.data.startupConfig, "enable")) {
+            const oldValue = obj.data.startupConfig.enable;
             obj.data.startupConfig.enable = 0;
+            log(`✅ set data.startupConfig.enable ${oldValue} -> 0`);
             modified = true;
         }
         if (Object.prototype.hasOwnProperty.call(obj.data.startupConfig, "frequency")) {
+            const oldValue = obj.data.startupConfig.frequency;
             obj.data.startupConfig.frequency = 9999;
+            log(`✅ set data.startupConfig.frequency ${oldValue} -> 9999`);
             modified = true;
         }
     }
     
-    if (modified) {
-        log("✅ updated strategy config");
-    } else {
+    if (!modified) {
         log("⚪ strategy config unchanged");
     }
 }
