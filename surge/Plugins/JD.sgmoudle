@@ -1,0 +1,32 @@
+#!name=京东去广告
+#!desc=移除京东开屏广告，精简我的页面产品推广。
+#!author=RuCu6[https://github.com/RuCu6], Maasea[https://github.com/Maasea], Luoxixi[https://gist.github.com/luoxixi279-dotcom/50a997bf6524df7c8499b84fd519e6d4]
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/JD.png
+#!category=luoxx
+#!openUrl=https://apps.apple.com/app/id414245413
+#!tag=去广告
+#!homepage=https://github.com/luoxmc/loon/blob/main/README.md
+#!date=2026-06-05 17:07:28
+
+[Rule]
+DOMAIN,ads-img-x.jd.com,REJECT
+DOMAIN,ads-video-x.jd.com,REJECT
+URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT,extended-matching
+
+[URL Rewrite]
+# 针对开屏广告接口的重写
+^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(start|getSplash) - reject
+
+[Body Rewrite]
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=basicConfig 'if (getpath(["data","JDMessage","socketmonitor"]) | has("isSocketEstablishedAhead")) then (setpath(["data","JDMessage","socketmonitor","isSocketEstablishedAhead"]; 0)) else . end'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=basicConfig 'if (getpath(["data","JDMessage","socketmonitor"]) | has("isSocketReport")) then (setpath(["data","JDMessage","socketmonitor","isSocketReport"]; 0)) else . end'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=basicConfig 'if (getpath(["data","JDHttpToolKit","httpdns"]) | has("httpdns")) then (setpath(["data","JDHttpToolKit","httpdns","httpdns"]; 0)) else . end'
+
+[Map Local]
+^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(searchBoxWord|stationPullService|uniformRecommend[06]) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+[Script]
+移除京东广告 = type=http-response, pattern=^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(deliverLayer|getTabHomeInfo|myOrderInfo|orderTrackBusiness|personinfoBusiness|start|welcomeHome), script-path=https://kelee.one/Resource/JavaScript/JD/JD_remove_ads.js, requires-body=true
+
+[MITM]
+hostname = %APPEND% api.m.jd.com
