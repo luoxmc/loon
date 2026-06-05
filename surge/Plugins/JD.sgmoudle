@@ -13,10 +13,6 @@ DOMAIN,ads-img-x.jd.com,REJECT
 DOMAIN,ads-video-x.jd.com,REJECT
 URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT,extended-matching
 
-[URL Rewrite]
-# 针对开屏广告接口的重写
-^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(start|getSplash) - reject
-
 [Map Local]
 ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(searchBoxWord|stationPullService|uniformRecommend[06]) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 

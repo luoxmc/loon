@@ -69,14 +69,30 @@ if (body) {
 
 
 function cleanBasicConfig(obj) {
-    setExistingProperty(obj?.data?.JDHttpToolKit?.httpdns, "httpdns", 0, "data.JDHttpToolKit.httpdns.httpdns");
-    setExistingProperty(
-        obj?.data?.JDMessage?.socketmonitor,
-        "isSocketEstablishedAhead",
-        0,
-        "data.JDMessage.socketmonitor.isSocketEstablishedAhead"
-    );
-    setExistingProperty(obj?.data?.JDMessage?.socketmonitor, "isSocketReport", 0, "data.JDMessage.socketmonitor.isSocketReport");
+    let modified = false;
+    
+    if (obj?.data?.JDHttpToolKit?.httpdns && Object.prototype.hasOwnProperty.call(obj.data.JDHttpToolKit.httpdns, "httpdns")) {
+        obj.data.JDHttpToolKit.httpdns.httpdns = 0;
+        log("✅ set data.JDHttpToolKit.httpdns.httpdns -> 0");
+        modified = true;
+    }
+    
+    if (obj?.data?.JDMessage?.socketmonitor) {
+        if (Object.prototype.hasOwnProperty.call(obj.data.JDMessage.socketmonitor, "isSocketEstablishedAhead")) {
+            obj.data.JDMessage.socketmonitor.isSocketEstablishedAhead = 0;
+            log("✅ set data.JDMessage.socketmonitor.isSocketEstablishedAhead -> 0");
+            modified = true;
+        }
+        if (Object.prototype.hasOwnProperty.call(obj.data.JDMessage.socketmonitor, "isSocketReport")) {
+            obj.data.JDMessage.socketmonitor.isSocketReport = 0;
+            log("✅ set data.JDMessage.socketmonitor.isSocketReport -> 0");
+            modified = true;
+        }
+    }
+    
+    if (!modified) {
+        log("⚪ basic config unchanged");
+    }
 }
 
 function cleanDeliveryPage(obj) {
@@ -102,14 +118,16 @@ function cleanNewProductPage(obj) {
     let modified = false;
     if (obj?.result?.iconInfo) {
         delete obj.result.iconInfo;
+        log("✅ deleted result.iconInfo");
         modified = true;
     }
     if (obj?.result?.roofTop) {
         delete obj.result.roofTop;
+        log("✅ deleted result.roofTop");
         modified = true;
     }
-    if (modified) {
-        log("✅ cleaned new product page");
+    if (!modified) {
+        log("⚪ new product page unchanged");
     }
 }
 
@@ -212,29 +230,34 @@ function cleanProfileBaseFloor(floor) {
     let modified = false;
     if (data?.commonPopup) {
         delete data.commonPopup;
+        log("✅ deleted commonPopup");
         modified = true;
     }
     if (data?.commonPopup_dynamic) {
         delete data.commonPopup_dynamic;
+        log("✅ deleted commonPopup_dynamic");
         modified = true;
     }
     if (data?.floatLayer) {
         delete data.floatLayer;
+        log("✅ deleted floatLayer");
         modified = true;
     }
 
     if (data?.commonTips?.length > 0) {
         data.commonTips = [];
+        log("✅ cleared commonTips");
         modified = true;
     }
 
     if (data?.commonWindows?.length > 0) {
         data.commonWindows = [];
+        log("✅ cleared commonWindows");
         modified = true;
     }
     
-    if (modified) {
-        log("✅ cleaned profile base floor");
+    if (!modified) {
+        log("⚪ profile base floor unchanged");
     }
 }
 
