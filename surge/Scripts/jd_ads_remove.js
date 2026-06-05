@@ -1,47 +1,6 @@
-/*
-脚本引用https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/jingdong.js
-*/
-// 2024-01-23 09:50
-
-const url = $request.url;
-const requestBody = $request.body;
 const body = $response.body;
 
-const handlerRules = [
-    {
-        patterns: ["functionId=basicConfig"],
-        handler: cleanBasicConfig
-    },
-    {
-        patterns: ["functionId=deliverLayer", "functionId=orderTrackBusiness"],
-        handler: cleanDeliveryPage
-    },
-    {
-        patterns: ["functionId=getTabHomeInfo"],
-        handler: cleanNewProductPage
-    },
-    {
-        patterns: ["functionId=myOrderInfo"],
-        handler: cleanOrderPage
-    },
-    {
-        patterns: ["functionId=personinfoBusiness"],
-        handler: cleanProfilePage
-    },
-    {
-        patterns: ["functionId=start"],
-        handler: cleanSplashAd
-    },
-    {
-        patterns: ["functionId=strategy"],
-        handler: cleanStrategyConfig
-    },
-    {
-        patterns: ["functionId=welcomeHome"],
-        handler: cleanHomeConfig
-    }
-];
-
+// 广告清理规则配置
 const deliveryBlockedFloorIds = ["banner", "jdDeliveryBanner"];
 const orderBlockedFloorIds = ["bannerFloor", "bpDynamicFloor", "plusFloor"];
 const profileBlockedFloorIds = [
@@ -89,20 +48,19 @@ const homeBlockedTypes = [
 
 if (body) {
     const obj = JSON.parse(body);
-    // 判断url中是不是有functionId参数，没有的话就取requestBody作为参数传进下面两个方法
-    const functionId = getFunctionId(url, requestBody);
-    const matchedRule = findHandlerRule(functionId);
-
-    log(`url=${url}`);
-    log(`requestBody=${requestBody || 'empty'}`);
-    log(`functionId=${functionId || "unknown"}`);
-
-    if (matchedRule) {
-        log(`matched patterns=${matchedRule.patterns.join("|")}`);
-        matchedRule.handler(obj);
-    } else {
-        log("no matched handler, response body kept unchanged");
-    }
+    
+    log("start processing response body");
+    
+    // 对所有响应统一执行广告清理，不依赖 functionId
+    // 每个清理函数内部会检查对应的 key 是否存在，不存在则跳过
+    cleanBasicConfig(obj);
+    cleanDeliveryPage(obj);
+    cleanNewProductPage(obj);
+    cleanOrderPage(obj);
+    cleanProfilePage(obj);
+    cleanSplashAd(obj);
+    cleanStrategyConfig(obj);
+    cleanHomeConfig(obj);
 
     log("script finished");
     $done({ body: JSON.stringify(obj) });
@@ -111,39 +69,7 @@ if (body) {
     $done({});
 }
 
-function getFunctionId(requestUrl, requestBody) {
-    // 首先尝试从 URL 中获取 functionId
-    const urlParam = requestUrl.match(/[?&]functionId=([^&]+)/)?.[1];
-    if (urlParam) {
-        return urlParam;
-    }
-    
-    // 如果 URL 中没有，则从 requestBody 中获取
-    // 注意：需要在 Surge 配置中添加 requires-body = true 才能获取到 requestBody
-    if (requestBody) {
-        try {
-            // requestBody 可能是 JSON 字符串或表单格式
-            const params = JSON.parse(requestBody);
-            return params.functionId;
-        } catch (e) {
-            // 如果不是 JSON，尝试解析为表单格式 (functionId=xxx&other=yyy)
-            const formParam = requestBody.match(/functionId=([^&]+)/)?.[1];
-            if (formParam) {
-                return formParam;
-            }
-            log(`failed to parse requestBody for functionId: ${e.message}`);
-        }
-    }
-    
-    return undefined;
-}
 
-function findHandlerRule(functionId) {
-    if (!functionId) {
-        return null;
-    }
-    return handlerRules.find((rule) => rule.patterns.some((pattern) => pattern.includes(functionId)));
-}
 
 function cleanBasicConfig(obj) {
     log("cleanBasicConfig start");
