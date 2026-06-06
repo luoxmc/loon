@@ -35,13 +35,13 @@
 # surge资源
 
 ### 模块列表
-> 点击链接即可快速导入surge (仅ios版，mac版不支持快速导入，请手动复制链接导入)
+> 手动复制链接在模块管理中导入
 
-1. 掌通家园去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhangTongJiaYuan.sgmoudle](surge:///install-module?url=https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhangTongJiaYuan.sgmoudle)
-2. 指尖水务去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiJianShuiWu.sgmoudle](surge:///install-module?url=https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiJianShuiWu.sgmoudle)
-3. 挚达去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiDa.sgmoudle](surge:///install-module?url=https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiDa.sgmoudle)
-4. 京东去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/JD.sgmoudle](surge:///install-module?url=https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/JD.sgmoudle)
-5. 米家去广告：[https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/MiJia.sgmoudle](surge:///install-module?url=https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/MiJia.sgmoudle)
+1. 掌通家园去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhangTongJiaYuan.sgmoudle
+2. 指尖水务去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiJianShuiWu.sgmoudle
+3. 挚达去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/ZhiDa.sgmoudle
+4. 京东去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/JD.sgmoudle
+5. 米家去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/MiJia.sgmoudle
 
 
 
