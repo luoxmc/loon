@@ -1,13 +1,10 @@
 #!name=掌通家园去广告
 #!desc=移除掌通家园开屏广告、顶部banner广告，活动推荐banner、首页消息中的信息流广告
 #!author=luoxx[https://github.com/luoxmc]
-#!icon=https://raw.githubusercontent.com/luoxmc/loon/main/Icon/ztjy.png
-#!openUrl=https://apps.apple.com/cn/app/id914847333
 #!category=luoxx
 #!tag=去广告
-#!loon_version=3.3.2(877)
 #!homepage=https://github.com/luoxmc/loon/blob/main/README.md
-#!date=2025-10-30 17:50
+#!date=2026-06-06 12:49:23
 
 [Body Rewrite]
 http-response-jq ^https:\/\/api.szy.cn\/appOpenServer\/proxy\/config\/openScreenRuleConfigV1 'if (getpath(["body","gardener"]) | has("push_ad_shutdown")) then (setpath(["body","gardener","push_ad_shutdown"]; 0)) else . end'

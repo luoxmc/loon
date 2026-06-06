@@ -1,13 +1,10 @@
 #!name=指尖水务去广告
 #!desc=移除指尖水务开屏广告、缴费页广告
 #!author=luoxx[https://github.com/luoxmc]
-#!icon=https://raw.githubusercontent.com/luoxmc/loon/main/Icon/zjsw.png
-#!openUrl=https://apps.apple.com/cn/app/id1546591649
 #!category=luoxx
 #!tag=去广告
-#!loon_version=3.3.2(877)
 #!homepage=https://github.com/luoxmc/loon/blob/main/README.md
-#!date=2025-09-03 17:25
+#!date=2026-06-06 12:49:12
 
 [Body Rewrite]
 http-response-jq ^https:\/\/wl.tap-water.cn\/product\/getOnlineSlide\? 'if (getpath([]) | has("content")) then (setpath(["content"]; [])) else . end'
