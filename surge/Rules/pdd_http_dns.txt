@@ -1,0 +1,9 @@
+# 拼多多httpdns服务器的ip列表
+# 不一定完整，纯靠手动抓取的
+# 将该规则集设置为REJECT-DROP策略，并且加上pre-matching和no-resolve标记，可以很大程度上解决拼多多httpdns请求导致的请求风暴问题
+IP-CIDR,114.110.96.0/24
+IP-CIDR,114.110.97.0/24
+IP-CIDR,101.35.204.0/24
+IP-CIDR,101.35.212.0/24
+IP-CIDR,121.5.84.0/24
+IP-CIDR,81.69.130.0/24
