@@ -11,6 +11,7 @@ http-response-jq ^https:\/\/home\.mi\.com\/cgi-op\/api\/v1\/recommendation\/mode
 http-response-jq ^https:\/\/home\.mi\.com\/cgi-op\/api\/v1\/resource\/realtime\/openingBanner "(.data.list) = []"
 http-response-jq ^https:\/\/home\.mi\.com\/cgi-op\/api\/v1\/recommendation\/openingBanner "(.data.list) = []"
 http-response-jq ^https:\/\/home\.mi\.com\/cgi-op\/api\/v1\/recommendation\/carousel\/banners "(.data.list) = []"
+http-response-jq ^https:\/\/home\.mi\.com\/cgi-op\/api\/v1\/recommendation\/myTab "(.data.banners) = []"
 
 [MITM]
 hostname = %APPEND% home.mi.com
