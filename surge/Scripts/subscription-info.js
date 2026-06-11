@@ -59,11 +59,14 @@ function fetchInfo(url, resetDay, subTitle) {
 
             const currentUA = uaAttempts[attemptIndex].headers ? uaAttempts[attemptIndex].headers["User-Agent"] : "系统默认";
             const options = { url, timeout: 5, ...uaAttempts[attemptIndex] };
+            const startTime = Date.now();
 
             $httpClient.get(options, (err, resp) => {
+                const duration = Date.now() - startTime;
+                
                 if (err || !resp || resp.status !== 200) {
                     const statusCode = resp ? resp.status : '请求错误';
-                    console.log(`[${subTitle}] 请求失败 - UA: ${simplifyUA(currentUA)}, 状态码: ${statusCode}, 错误: ${err ? err.message || err : '无'}`);
+                    console.log(`[${subTitle}] 请求失败 - UA: ${simplifyUA(currentUA)}, 状态码: ${statusCode}, 错误: ${err ? err.message || err : '无'}, 耗时: ${duration}ms`);
                     lastStatusCode = statusCode;
                     lastUsedUA = currentUA;
                     // 如果当前UA尝试失败，尝试下一个UA
@@ -75,7 +78,7 @@ function fetchInfo(url, resetDay, subTitle) {
                 // 检查是否有subscription-userinfo头
                 const headerKey = Object.keys(resp.headers).find(k => k.toLowerCase() === "subscription-userinfo");
                 if (!headerKey || !resp.headers[headerKey]) {
-                    console.log(`[${subTitle}] 未获取到subscription-userinfo - UA: ${simplifyUA(currentUA)}, 响应头: ${JSON.stringify(resp.headers)}`);
+                    console.log(`[${subTitle}] 未获取到subscription-userinfo - UA: ${simplifyUA(currentUA)}, 响应头: ${JSON.stringify(resp.headers)}, 耗时: ${duration}ms`);
                     lastStatusCode = resp.status;
                     lastUsedUA = currentUA;
                     // 没有获取到关键信息，尝试下一个UA
@@ -85,7 +88,7 @@ function fetchInfo(url, resetDay, subTitle) {
                 }
 
                 // 成功获取到数据
-                console.log(`[${subTitle}] 请求成功 - UA: ${simplifyUA(currentUA)}, subscription-userinfo: ${resp.headers[headerKey]}`);
+                console.log(`[${subTitle}] 请求成功 - UA: ${simplifyUA(currentUA)}, subscription-userinfo: ${resp.headers[headerKey]}, 耗时: ${duration}ms`);
 
                 // 成功获取到数据，解析并返回
                 const data = {};
