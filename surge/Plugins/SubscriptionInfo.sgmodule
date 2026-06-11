@@ -7,7 +7,7 @@
 #!arguments-desc=【参数设置说明】\n① A~H分别对应不同订阅\n② 可同时显示8个订阅流量信息\n③ 直接填订阅地址即可使用-无需编码
 
 [Panel]
-订阅流量 = script-name=订阅面板, update-interval=3600
+订阅流量 = script-name=订阅面板, update-interval=86400
 
 [Script]
 订阅面板 = type=generic, timeout=20, script-path=https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Scripts/subscription-info.js, argument=title1={{{A_name}}}&url1={{{A_url}}}&resetDay1={{{A_reset}}}&title2={{{B_name}}}&url2={{{B_url}}}&resetDay2={{{B_reset}}}&title3={{{C_name}}}&url3={{{C_url}}}&resetDay3={{{C_reset}}}&title4={{{D_name}}}&url4={{{D_url}}}&resetDay4={{{D_reset}}}&title5={{{E_name}}}&url5={{{E_url}}}&resetDay5={{{E_reset}}}&title6={{{F_name}}}&url6={{{F_url}}}&resetDay6={{{F_reset}}}&title7={{{G_name}}}&url7={{{G_url}}}&resetDay7={{{G_reset}}}&title8={{{H_name}}}&url8={{{H_url}}}&resetDay8={{{H_reset}}}
