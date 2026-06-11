@@ -159,20 +159,21 @@ function isValidUrl(url) {
             // 错误情况：显示标题和错误信息
             return {
                 index: sub.index,
-                panel: sub.title ? `${sub.title}(已用：${result.percent}%)\n${result.content}` : result.content
+                title: sub.title,
+                panel: sub.title ? `${sub.title} (已用：${result.percent}%)\n${result.content}` : result.content
             };
         }
         
         // 正常情况：解析content中的已用行，将其合并到标题行
         const lines = result.content.split('\n');
-        const usedLine = lines.find(line => line.startsWith('已用：'));
         const otherLines = lines.filter(line => !line.startsWith('已用：'));
         
-        const titleLine = sub.title ? `${sub.title}(已用：${result.percent}%)` : '';
+        const titleLine = sub.title ? `${sub.title} (已用：${result.percent}%)` : '';
         const displayContent = [titleLine, ...otherLines].filter(line => line).join('\n');
         
         return {
             index: sub.index,
+            title: sub.title,
             panel: displayContent
         };
     });
@@ -180,9 +181,33 @@ function isValidUrl(url) {
     // 等待所有请求完成
     const results = await Promise.all(promises);
 
+    // 计算最长标题长度，用于对齐
+    let maxTitleLength = 0;
+    results.forEach(result => {
+        if (result.title) {
+            // 计算中文字符长度为2，英文字符长度为1
+            const length = result.title.replace(/[\u4e00-\u9fa5]/g, 'aa').length;
+            if (length > maxTitleLength) {
+                maxTitleLength = length;
+            }
+        }
+    });
+
     // 按原始顺序排序并添加到panels
     results.sort((a, b) => a.index - b.index);
-    results.forEach(result => panels.push(result.panel));
+    results.forEach(result => {
+        if (result.title) {
+            // 计算需要补充的空格数
+            const currentLength = result.title.replace(/[\u4e00-\u9fa5]/g, 'aa').length;
+            const padding = ' '.repeat(maxTitleLength - currentLength);
+            // 在标题后添加空格以对齐
+            result.panel = result.panel.replace(
+                `${result.title} (已用：`,
+                `${result.title}${padding} (已用：`
+            );
+        }
+        panels.push(result.panel);
+    });
 
     $done({
         title: "订阅流量",
