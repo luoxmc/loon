@@ -26,7 +26,7 @@ function getResetInfo(resetDay) {
 
 function fetchInfo(url, resetDay) {
     return new Promise(resolve => {
-        $httpClient.get({ url, headers: { "User-Agent": "Quantumult%20X/1.5.2" } }, (err, resp) => {
+        $httpClient.get({ url, headers: { "User-Agent": "Shadowrocket/3082" } }, (err, resp) => {
             if (err || !resp || resp.status !== 200) {
                 resolve(`订阅请求失败，状态码：${resp ? resp.status : "请求错误"}`);
                 return;
@@ -81,7 +81,9 @@ function isValidUrl(url) {
 
 (async () => {
     const panels = [];
+    const validSubscriptions = [];
 
+    // 收集所有有效的订阅
     for (let i = 1; i <= 10; i++) {
         const urlKey = `url${i}`;
         const titleKey = `title${i}`;
@@ -92,9 +94,40 @@ function isValidUrl(url) {
             continue;
         }
 
-        const content = await fetchInfo(args[urlKey], args[resetKey] ? parseInt(args[resetKey]) : null);
-        panels.push(args[titleKey] ? `机场：${args[titleKey]}\n${content}` : content);
+        validSubscriptions.push({
+            index: i,
+            url: args[urlKey],
+            title: args[titleKey],
+            resetDay: args[resetKey] ? parseInt(args[resetKey]) : null
+        });
     }
+
+    // 如果没有有效订阅，直接返回
+    if (validSubscriptions.length === 0) {
+        $done({
+            title: "订阅流量",
+            content: "未配置有效的订阅地址",
+            icon: "antenna.radiowaves.left.and.right.circle.fill",
+            "icon-color": "#00E28F"
+        });
+        return;
+    }
+
+    // 并发请求所有订阅
+    const promises = validSubscriptions.map(async (sub) => {
+        const content = await fetchInfo(sub.url, sub.resetDay);
+        return {
+            index: sub.index,
+            panel: sub.title ? `机场：${sub.title}\n${content}` : content
+        };
+    });
+
+    // 等待所有请求完成
+    const results = await Promise.all(promises);
+
+    // 按原始顺序排序并添加到panels
+    results.sort((a, b) => a.index - b.index);
+    results.forEach(result => panels.push(result.panel));
 
     $done({
         title: "订阅流量",
