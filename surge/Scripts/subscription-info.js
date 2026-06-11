@@ -58,7 +58,7 @@ function fetchInfo(url, resetDay, subTitle) {
             }
 
             const currentUA = uaAttempts[attemptIndex].headers ? uaAttempts[attemptIndex].headers["User-Agent"] : "系统默认";
-            const options = { url, ...uaAttempts[attemptIndex] };
+            const options = { url, timeout: 5, ...uaAttempts[attemptIndex] };
 
             $httpClient.get(options, (err, resp) => {
                 if (err || !resp || resp.status !== 200) {
