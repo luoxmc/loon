@@ -26,7 +26,7 @@ function getResetInfo(resetDay) {
 
 function fetchInfo(url, resetDay) {
     return new Promise(resolve => {
-        $httpClient.get({ url, headers: { "User-Agent": "Quantumult%20X/1.5.2" } }, (err, resp) => {
+        $httpClient.get({ url, headers: { "User-Agent": "Loon/962 CFNetwork/3860.600.12 Darwin/25.5.0" } }, (err, resp) => {
             if (err || !resp || resp.status !== 200) {
                 resolve(`订阅请求失败，状态码：${resp ? resp.status : "请求错误"}`);
                 return;
@@ -43,7 +43,7 @@ function fetchInfo(url, resetDay) {
 
             const used = (data.upload || 0) + (data.download || 0);
             const total = data.total || 0;
-            const percent = total > 0 ? Math.round((used / total) * 100) : 0;
+            const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
 
             const lines = [
                 `已用：${percent}%`,
