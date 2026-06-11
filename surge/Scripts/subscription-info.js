@@ -26,7 +26,7 @@ function getResetInfo(resetDay) {
 
 function fetchInfo(url, resetDay) {
     return new Promise(resolve => {
-        $httpClient.get({ url, headers: { "User-Agent": "Shadowrocket/3082" } }, (err, resp) => {
+        $httpClient.get({ url, headers: { "User-Agent": "Quantumult%20X/1.5.2" } }, (err, resp) => {
             if (err || !resp || resp.status !== 200) {
                 resolve(`订阅请求失败，状态码：${resp ? resp.status : "请求错误"}`);
                 return;
