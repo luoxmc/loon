@@ -47,6 +47,7 @@
 
 ### 规则列表
 1. 拼多多httpdns服务器ip列表：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Rules/pdd_http_dns.txt
+2. 一些常见的容易造成请求风暴的ip或域名：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Rules/anti_req_storm.txt
 
 
 
