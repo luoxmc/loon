@@ -1,5 +1,5 @@
 #!name=机场流量信息
-#!desc=直接复制机场订阅地址进去就行
+#!desc=修改自iBL3ND的模块，多订阅异步请求加快速度、剩余百分比显示小数点后1位更精确、多ua尝试以解决部分机场特定ua不返回剩余流量的问题
 #!category=luoxx
 
 #!arguments=A_name:订阅A名称,A_url:订阅A地址,A_reset:重置日,B_name:订阅B名称,B_url:订阅B地址,B_reset:重置日,C_name:订阅C名称,C_url:订阅C地址,C_reset:重置日,D_name:订阅D名称,D_url:订阅D地址,D_reset:重置日,E_name:订阅E名称,E_url:订阅E地址,E_reset:重置日,F_name:订阅F名称,F_url:订阅F地址,F_reset:重置日,G_name:订阅G名称,G_url:订阅G地址,G_reset:重置日,H_name:订阅H名称,H_url:订阅H地址,H_reset:重置日

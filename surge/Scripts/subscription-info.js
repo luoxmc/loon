@@ -26,41 +26,71 @@ function getResetInfo(resetDay) {
 
 function fetchInfo(url, resetDay) {
     return new Promise(resolve => {
-        $httpClient.get({ url, headers: { "User-Agent": "Loon/962 CFNetwork/3860.600.12 Darwin/25.5.0" } }, (err, resp) => {
-            if (err || !resp || resp.status !== 200) {
-                resolve(`订阅请求失败，状态码：${resp ? resp.status : "请求错误"}`);
+        // 定义UA重试策略
+        const uaAttempts = [
+            { headers: { "User-Agent": "Loon/962 CFNetwork/3860.600.12 Darwin/25.5.0" } },
+            { headers: { "User-Agent": "Shadowrocket/3308 CFNetwork/3886.100.1 Darwin/27.0.0 iPhone18,3" } },
+            {} // 不使用自定义UA，使用系统默认
+        ];
+
+        let attemptIndex = 0;
+
+        function tryRequest() {
+            if (attemptIndex >= uaAttempts.length) {
+                resolve(`订阅请求失败：无法获取订阅信息`);
                 return;
             }
 
-            const data = {};
-            const headerKey = Object.keys(resp.headers).find(k => k.toLowerCase() === "subscription-userinfo");
-            if (headerKey && resp.headers[headerKey]) {
+            const options = { url, ...uaAttempts[attemptIndex] };
+
+            $httpClient.get(options, (err, resp) => {
+                if (err || !resp || resp.status !== 200) {
+                    // 如果当前UA尝试失败，尝试下一个UA
+                    attemptIndex++;
+                    tryRequest();
+                    return;
+                }
+
+                // 检查是否有subscription-userinfo头
+                const headerKey = Object.keys(resp.headers).find(k => k.toLowerCase() === "subscription-userinfo");
+                if (!headerKey || !resp.headers[headerKey]) {
+                    // 没有获取到关键信息，尝试下一个UA
+                    attemptIndex++;
+                    tryRequest();
+                    return;
+                }
+
+                // 成功获取到数据，解析并返回
+                const data = {};
                 resp.headers[headerKey].split(";").forEach(p => {
                     const [k, v] = p.trim().split("=");
                     if (k && v) data[k] = parseInt(v);
                 });
-            }
 
-            const used = (data.upload || 0) + (data.download || 0);
-            const total = data.total || 0;
-            const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
+                const used = (data.upload || 0) + (data.download || 0);
+                const total = data.total || 0;
+                const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
 
-            const lines = [
-                `已用：${percent}%`,
-                `流量：${(used / 1024 / 1024 / 1024).toFixed(2)} GB｜${(total / 1024 / 1024 / 1024).toFixed(2)} GB`
-            ];
+                const lines = [
+                    `已用：${percent}%`,
+                    `流量：${(used / 1024 / 1024 / 1024).toFixed(2)} GB｜${(total / 1024 / 1024 / 1024).toFixed(2)} GB`
+                ];
 
-            if (data.expire) {
-                const d = new Date(data.expire * 1000);
-                lines.push(`到期：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号`);
-            }
+                if (data.expire) {
+                    const d = new Date(data.expire * 1000);
+                    lines.push(`到期：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号`);
+                }
 
-            if (resetDay) {
-                lines.push(getResetInfo(resetDay));
-            }
+                if (resetDay) {
+                    lines.push(getResetInfo(resetDay));
+                }
 
-            resolve(lines.join("\n"));
-        });
+                resolve(lines.join("\n"));
+            });
+        }
+
+        // 开始第一次请求
+        tryRequest();
     });
 }
 
