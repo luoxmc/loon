@@ -1,0 +1,41 @@
+# 将该规则集设置为REJECT-DROP策略，并且加上pre-matching和no-resolve标记，可以很大程度上解决请求风暴问题
+
+# 拼多多httpdns服务器的ip列表
+IP-CIDR,114.110.96.0/24
+IP-CIDR,114.110.97.0/24
+IP-CIDR,101.35.204.0/24
+IP-CIDR,101.35.212.0/24
+IP-CIDR,101.36.166.0/24
+IP-CIDR,121.5.84.0/24
+IP-CIDR,81.69.130.0/24
+
+# 其他
+DOMAIN,dataflow.biliapi.com
+DOMAIN,stun.chat.bilibili.com
+DOMAIN,notes-analytics-events.apple.com
+DOMAIN,collector.github.com
+DOMAIN,analytics-api.smzdm.com
+DOMAIN,t2.xiaohongshu.com
+DOMAIN,sessions.bugsnag.com
+DOMAIN,spider-tracker.xiaohongshu.com
+DOMAIN,mon.zijieapi.com
+DOMAIN,log.snssdk.com
+DOMAIN,log.mmstat.com
+DOMAIN,loggw.alipay.com
+DOMAIN,loggw.alipay.com.cn
+DOMAIN,gm.mmstat.com
+DOMAIN,wgo.mmstat.com
+DOMAIN,ztjy.cn-hangzhou.log.aliyuncs.com
+DOMAIN,tracking.miui.com
+DOMAIN,snowflake.qq.com
+DOMAIN,s-gm.mmstat.com
+DOMAIN,mum.alibabachengdun.com
+DOMAIN,metrics.icloud.com
+DOMAIN,mcs.zijieapi.com
+DOMAIN,mcs.volceapplog.com
+DOMAIN,apm-fe.xiaohongshu.com
+DOMAIN,apm-rum.inf.miui.com
+DOMAIN,supportmetrics.apple.com
+
+
+
