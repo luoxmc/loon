@@ -36,6 +36,7 @@ DOMAIN,mcs.volceapplog.com
 DOMAIN,apm-fe.xiaohongshu.com
 DOMAIN,apm-rum.inf.miui.com
 DOMAIN,supportmetrics.apple.com
+DOMAIN,sdk.open.talk.gepush.com
 
 
 
