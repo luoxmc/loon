@@ -98,7 +98,11 @@ function fetchInfo(url, resetDay) {
                     lines.push(getResetInfo(resetDay));
                 }
 
-                resolve(lines.join("\n"));
+                resolve({
+                    content: lines.join("\n"),
+                    percent: percent,
+                    emoji: statusEmoji
+                });
             });
         }
 
@@ -158,22 +162,10 @@ function isValidUrl(url) {
 
     // 并发请求所有订阅
     const promises = validSubscriptions.map(async (sub) => {
-        const content = await fetchInfo(sub.url, sub.resetDay);
-        // 提取百分比和emoji信息
-        const percentMatch = content.match(/已用：([\d.]+)%/);
-        const emojiMatch = content.match(/statusEmoji=([🟢🔵🟡🟠🔴])/);
-        
-        let displayContent = content;
-        // 从content中移除已用行和emoji标记
-        displayContent = displayContent.replace(/已用：[\d.]+%\n/, '');
-        displayContent = displayContent.replace(/statusEmoji=[🟢🔵🟡🟠🔴]\n/, '');
-        
-        const percentText = percentMatch ? `${percentMatch[1]}%` : '';
-        const emoji = emojiMatch ? emojiMatch[1] : '';
-        
+        const result = await fetchInfo(sub.url, sub.resetDay);
         return {
             index: sub.index,
-            panel: sub.title ? `${emoji} ${sub.title} (${percentText})\n${displayContent}` : displayContent
+            panel: sub.title ? `${sub.title} (${result.emoji}${result.percent}%)\n${result.content}` : result.content
         };
     });
 
