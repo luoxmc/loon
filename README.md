@@ -43,6 +43,7 @@
 4. 京东去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/JD.sgmoudle
 5. 米家去广告：https://raw.githubusercontent.com/luoxmc/loon/main/surge/Plugins/MiJia.sgmoudle
 6. 腾讯视频去广告：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Plugins/TencentVideo.sgmoudle
+7. 机场流量面板：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Plugins/SubscriptionInfo.sgmodule
 
 ### 规则列表
 1. 拼多多httpdns服务器ip列表：https://raw.githubusercontent.com/luoxmc/loon/refs/heads/main/surge/Rules/pdd_http_dns.txt
