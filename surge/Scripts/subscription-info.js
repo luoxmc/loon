@@ -71,14 +71,27 @@ function fetchInfo(url, resetDay) {
                 const total = data.total || 0;
                 const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
 
+                // 根据使用百分比选择emoji
+                let statusEmoji;
+                if (percent < 25) {
+                    statusEmoji = "🟢"; // 绿色 - 用量少
+                } else if (percent < 50) {
+                    statusEmoji = "🔵"; // 蓝色 - 用量适中
+                } else if (percent < 75) {
+                    statusEmoji = "🟡"; // 黄色 - 用量较多
+                } else if (percent < 90) {
+                    statusEmoji = "🟠"; // 橙色 - 用量很多
+                } else {
+                    statusEmoji = "🔴"; // 红色 - 即将用完
+                }
+
                 const lines = [
-                    `已用：${percent}%`,
                     `流量：${(used / 1024 / 1024 / 1024).toFixed(2)} GB｜${(total / 1024 / 1024 / 1024).toFixed(2)} GB`
                 ];
 
                 if (data.expire) {
                     const d = new Date(data.expire * 1000);
-                    lines.push(`到期：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号`);
+                    lines.push(`到期：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`);
                 }
 
                 if (resetDay) {
@@ -146,9 +159,21 @@ function isValidUrl(url) {
     // 并发请求所有订阅
     const promises = validSubscriptions.map(async (sub) => {
         const content = await fetchInfo(sub.url, sub.resetDay);
+        // 提取百分比和emoji信息
+        const percentMatch = content.match(/已用：([\d.]+)%/);
+        const emojiMatch = content.match(/statusEmoji=([🟢🔵🟡🟠🔴])/);
+        
+        let displayContent = content;
+        // 从content中移除已用行和emoji标记
+        displayContent = displayContent.replace(/已用：[\d.]+%\n/, '');
+        displayContent = displayContent.replace(/statusEmoji=[🟢🔵🟡🟠🔴]\n/, '');
+        
+        const percentText = percentMatch ? `${percentMatch[1]}%` : '';
+        const emoji = emojiMatch ? emojiMatch[1] : '';
+        
         return {
             index: sub.index,
-            panel: sub.title ? `机场：${sub.title}\n${content}` : content
+            panel: sub.title ? `${emoji} ${sub.title} (${percentText})\n${displayContent}` : displayContent
         };
     });
 
