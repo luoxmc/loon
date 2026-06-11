@@ -24,7 +24,17 @@ function getResetInfo(resetDay) {
     return `重置：${diff}天`;
 }
 
-function fetchInfo(url, resetDay) {
+function fetchInfo(url, resetDay, subTitle) {
+    let lastStatusCode = null;
+    let lastUsedUA = null;
+    
+    // 简化UA显示：只保留第一个/前面的部分
+    function simplifyUA(ua) {
+        if (!ua || ua === '系统默认') return ua;
+        const index = ua.indexOf('/');
+        return index > 0 ? ua.substring(0, index) : ua;
+    }
+    
     return new Promise(resolve => {
         // 定义UA重试策略
         const uaAttempts = [
@@ -37,18 +47,25 @@ function fetchInfo(url, resetDay) {
 
         function tryRequest() {
             if (attemptIndex >= uaAttempts.length) {
+                const errorMsg = `请求失败，错误码：${lastStatusCode || '未知'}`;
+                console.log(`[${subTitle}] 所有UA尝试均失败 - 最后使用UA: ${simplifyUA(lastUsedUA) || '无'}, 错误: ${errorMsg}`);
                 resolve({
-                    content: `请求失败：无法获取订阅信息`,
+                    content: errorMsg,
                     percent: "0.0",
                     error: true
                 });
                 return;
             }
 
+            const currentUA = uaAttempts[attemptIndex].headers ? uaAttempts[attemptIndex].headers["User-Agent"] : "系统默认";
             const options = { url, ...uaAttempts[attemptIndex] };
 
             $httpClient.get(options, (err, resp) => {
                 if (err || !resp || resp.status !== 200) {
+                    const statusCode = resp ? resp.status : '请求错误';
+                    console.log(`[${subTitle}] 请求失败 - UA: ${simplifyUA(currentUA)}, 状态码: ${statusCode}, 错误: ${err ? err.message || err : '无'}`);
+                    lastStatusCode = statusCode;
+                    lastUsedUA = currentUA;
                     // 如果当前UA尝试失败，尝试下一个UA
                     attemptIndex++;
                     tryRequest();
@@ -58,11 +75,17 @@ function fetchInfo(url, resetDay) {
                 // 检查是否有subscription-userinfo头
                 const headerKey = Object.keys(resp.headers).find(k => k.toLowerCase() === "subscription-userinfo");
                 if (!headerKey || !resp.headers[headerKey]) {
+                    console.log(`[${subTitle}] 未获取到subscription-userinfo - UA: ${simplifyUA(currentUA)}, 响应头: ${JSON.stringify(resp.headers)}`);
+                    lastStatusCode = resp.status;
+                    lastUsedUA = currentUA;
                     // 没有获取到关键信息，尝试下一个UA
                     attemptIndex++;
                     tryRequest();
                     return;
                 }
+
+                // 成功获取到数据
+                console.log(`[${subTitle}] 请求成功 - UA: ${simplifyUA(currentUA)}, subscription-userinfo: ${resp.headers[headerKey]}`);
 
                 // 成功获取到数据，解析并返回
                 const data = {};
@@ -153,7 +176,7 @@ function isValidUrl(url) {
 
     // 并发请求所有订阅
     const promises = validSubscriptions.map(async (sub) => {
-        const result = await fetchInfo(sub.url, sub.resetDay);
+        const result = await fetchInfo(sub.url, sub.resetDay, sub.title || '未命名');
         
         if (result.error) {
             // 错误情况：显示标题和错误信息
