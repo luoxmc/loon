@@ -16,6 +16,7 @@ DOMAIN,notes-analytics-events.apple.com
 DOMAIN,collector.github.com
 DOMAIN,analytics-api.smzdm.com
 DOMAIN,t2.xiaohongshu.com
+DOMAIN,apm-native.xiaohongshu.com
 DOMAIN,sessions.bugsnag.com
 DOMAIN,spider-tracker.xiaohongshu.com
 DOMAIN,mon.zijieapi.com
