@@ -37,7 +37,11 @@ function fetchInfo(url, resetDay) {
 
         function tryRequest() {
             if (attemptIndex >= uaAttempts.length) {
-                resolve(`订阅请求失败：无法获取订阅信息`);
+                resolve({
+                    content: `请求失败：无法获取订阅信息`,
+                    percent: "0.0",
+                    error: true
+                });
                 return;
             }
 
@@ -71,21 +75,8 @@ function fetchInfo(url, resetDay) {
                 const total = data.total || 0;
                 const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
 
-                // 根据使用百分比选择emoji
-                let statusEmoji;
-                if (percent < 25) {
-                    statusEmoji = "🟢"; // 绿色 - 用量少
-                } else if (percent < 50) {
-                    statusEmoji = "🔵"; // 蓝色 - 用量适中
-                } else if (percent < 75) {
-                    statusEmoji = "🟡"; // 黄色 - 用量较多
-                } else if (percent < 90) {
-                    statusEmoji = "🟠"; // 橙色 - 用量很多
-                } else {
-                    statusEmoji = "🔴"; // 红色 - 即将用完
-                }
-
                 const lines = [
+                    `已用：${percent}%`,
                     `流量：${(used / 1024 / 1024 / 1024).toFixed(2)} GB｜${(total / 1024 / 1024 / 1024).toFixed(2)} GB`
                 ];
 
@@ -101,7 +92,7 @@ function fetchInfo(url, resetDay) {
                 resolve({
                     content: lines.join("\n"),
                     percent: percent,
-                    emoji: statusEmoji
+                    error: null
                 });
             });
         }
@@ -163,9 +154,26 @@ function isValidUrl(url) {
     // 并发请求所有订阅
     const promises = validSubscriptions.map(async (sub) => {
         const result = await fetchInfo(sub.url, sub.resetDay);
+        
+        if (result.error) {
+            // 错误情况：显示标题和错误信息
+            return {
+                index: sub.index,
+                panel: sub.title ? `${sub.title}(已用：${result.percent}%)\n${result.content}` : result.content
+            };
+        }
+        
+        // 正常情况：解析content中的已用行，将其合并到标题行
+        const lines = result.content.split('\n');
+        const usedLine = lines.find(line => line.startsWith('已用：'));
+        const otherLines = lines.filter(line => !line.startsWith('已用：'));
+        
+        const titleLine = sub.title ? `${sub.title}(已用：${result.percent}%)` : '';
+        const displayContent = [titleLine, ...otherLines].filter(line => line).join('\n');
+        
         return {
             index: sub.index,
-            panel: sub.title ? `${sub.title} (${result.emoji}${result.percent}%)\n${result.content}` : result.content
+            panel: displayContent
         };
     });
 
