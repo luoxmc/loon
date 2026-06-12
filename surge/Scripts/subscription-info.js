@@ -101,9 +101,18 @@ function fetchInfo(url, resetDay, subTitle) {
                 const total = data.total || 0;
                 const percent = total > 0 ? ((used / total) * 100).toFixed(1) : 0;
 
+                // 格式化流量显示，自动转换TB单位
+                function formatTraffic(bytes) {
+                    const gb = bytes / 1024 / 1024 / 1024;
+                    if (gb >= 1024) {
+                        return `${(gb / 1024).toFixed(2)} TB`;
+                    }
+                    return `${gb.toFixed(2)} GB`;
+                }
+
                 const lines = [
                     `已用：${percent}%`,
-                    `流量：${(used / 1024 / 1024 / 1024).toFixed(2)} GB｜${(total / 1024 / 1024 / 1024).toFixed(2)} GB`
+                    `流量：${formatTraffic(used)}｜${formatTraffic(total)}`
                 ];
 
                 if (data.expire) {
@@ -139,8 +148,8 @@ function isValidUrl(url) {
     // 跳过"重置日"文本
     if (url.includes("重置")) return false;
     // 必须是 http 或 https 开头
-    if (!url.startsWith("http://") && !url.startsWith("https://")) return false;
-    return true;
+    return !(!url.startsWith("http://") && !url.startsWith("https://"));
+
 }
 
 (async () => {
