@@ -13,6 +13,9 @@ DOMAIN,adsehera.ximalaya.com,REJECT,extended-matching,pre-matching
 DOMAIN,adse.wsa.ximalaya.com,REJECT,extended-matching,pre-matching
 DOMAIN,adbehavior.ximalaya.com,REJECT,extended-matching,pre-matching
 DOMAIN,adbehavior.wsa.ximalaya.com,REJECT,extended-matching,pre-matching
+IP-CIDR,101.91.134.0/24,REJECT,no-resolve,pre-matching
+IP-CIDR,101.91.135.0/24,REJECT,no-resolve,pre-matching
+IP-CIDR,101.91.136.0/24,REJECT,no-resolve,pre-matching
 
 [Body Rewrite]
 http-response-jq ^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/discovery-feed\/v\d\/mix\/ '.heData |= map(select(.item.list[].bizType != "SceneListenCard"))'
