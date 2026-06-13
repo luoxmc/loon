@@ -47,7 +47,15 @@ function fetchInfo(url, resetDay, subTitle) {
 
         function tryRequest() {
             if (attemptIndex >= uaAttempts.length) {
-                const errorMsg = `请求失败，错误码：${lastStatusCode || '未知'}`;
+                // 判断是请求失败还是未获取到订阅信息
+                let errorMsg;
+                if (lastStatusCode === 200) {
+                    errorMsg = "查询失败，机场未返回流量信息";
+                } else if (typeof lastStatusCode === 'number') {
+                    errorMsg = `请求失败，错误码：${lastStatusCode}`;
+                } else {
+                    errorMsg = `查询出错，错误信息：${lastStatusCode || '未知'}`;
+                }
                 console.log(`[${subTitle}] 所有UA尝试均失败 - 最后使用UA: ${simplifyUA(lastUsedUA) || '无'}, 错误: ${errorMsg}`);
                 resolve({
                     content: errorMsg,
@@ -65,9 +73,22 @@ function fetchInfo(url, resetDay, subTitle) {
                 const duration = Date.now() - startTime;
                 
                 if (err || !resp || resp.status !== 200) {
-                    const statusCode = resp ? resp.status : '请求错误';
-                    console.log(`[${subTitle}] 请求失败 - UA: ${simplifyUA(currentUA)}, 状态码: ${statusCode}, 错误: ${err ? err.message || err : '无'}, 耗时: ${duration}ms`);
-                    lastStatusCode = statusCode;
+                    let errorInfo;
+                    if (err) {
+                        // 判断是否是超时错误
+                        if (err.message && err.message.includes('timeout')) {
+                            errorInfo = '请求超时';
+                        } else {
+                            errorInfo = '请求出错';
+                        }
+                    } else if (!resp) {
+                        errorInfo = '请求出错';
+                    } else {
+                        errorInfo = resp.status;
+                    }
+                    
+                    console.log(`[${subTitle}] 请求失败 - UA: ${simplifyUA(currentUA)}, 状态码: ${errorInfo}, 错误: ${err ? err.message || err : '无'}, 耗时: ${duration}ms`);
+                    lastStatusCode = errorInfo;
                     lastUsedUA = currentUA;
                     // 如果当前UA尝试失败，尝试下一个UA
                     attemptIndex++;
