@@ -11,7 +11,7 @@ http-response-jq ^http:\/\/106.55.236.110:9001\/coterie\/selectPostOnlyPic "(.da
 http-response-jq ^http:\/\/106.55.236.110:9001\/auth\/run\/similarCourseByUser "(.data) = []"
 http-response-jq ^http:\/\/106.55.236.110:9001\/pub\/methods\/getAppPopAdvUrl "(.data) = []"
 http-response-jq ^http:\/\/106.55.236.110:9001\/pub\/methods\/getAppAdvUrl "(.data) = []"
-http-response-jq ^http:\/\/106\.55\.236\.110:9001\/index\/selectIndexInfoV2 .data.appHomeConfig.menu_ids = "1,2,7,20"
+http-response-jq ^http:\/\/106\.55\.236\.110:9001\/index\/selectIndexInfoV2 '.data.appHomeConfig.menu_ids = "1,2,7,20"'
 
 
 [MITM]
