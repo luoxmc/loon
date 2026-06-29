@@ -1,0 +1,15 @@
+#!name=嘿哈猫健身去广告
+#!desc=移除嘿哈猫健身轮播图、首页社区帖子。
+#!author=luoxx[https://github.com/luoxmc/loon/blob/main/README.md]
+#!category=luoxx
+#!tag=去广告
+#!homepage=https://github.com/luoxmc/loon/blob/main/README.md
+#!date=2026-06-29 12:36:35
+
+[Body Rewrite]
+http-response-jq ^http:\/\/106.55.236.110:9001\/coterie\/selectPostOnlyPic "(.data) = []"
+http-response-jq ^http:\/\/106.55.236.110:9001\/pub\/methods\/getAppAdvUrl "(.data) = []"
+http-response-jq ^http:\/\/106.55.236.110:9001\/auth\/run\/similarCourseByUser "(.data) = []"
+
+[MITM]
+hostname = %APPEND% 106.55.236.110:9001
